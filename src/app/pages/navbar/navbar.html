@@ -1,0 +1,48 @@
+<nav class="navbar" role="navigation" aria-label="Main navigation">
+  <div class="nav-container">
+    <!-- LEFT: Logo + Hamburger -->
+    <div class="nav-left">
+      <a routerLink="/dashboard"
+         class="logo"
+         (click)="closeMenu()"
+         aria-label="TaskFlow Dashboard">
+        Task<span aria-hidden="true">Flow</span>
+      </a>
+      <div style="width: 460px;"></div>
+      <button class="hamburger"
+              (click)="toggleMenu()"
+              [attr.aria-expanded]="menuOpen"
+              aria-controls="nav-menu"
+              aria-label="Toggle navigation menu">
+        ☰
+      </button>
+    </div>
+
+    <!-- MOBILE / OVERLAY MENU -->
+    <div class="nav-links"
+         id="nav-menu"
+         [class.open]="menuOpen"
+         role="menubar">
+      <a routerLink="/dashboard"
+         routerLinkActive="active"
+         role="menuitem"
+         (click)="closeMenu()">Dashboard</a>
+
+      <a routerLink="/tasks"
+         routerLinkActive="active"
+         role="menuitem"
+         (click)="closeMenu()">Tasks</a>
+
+      <button class="logout-btn mobile-logout"
+              role="menuitem"
+              (click)="logout()">Logout</button>
+    </div>
+
+    <!-- DESKTOP LOGOUT -->
+    <button class="logout-btn desktop-logout"
+            aria-label="Sign out from your account"
+            (click)="logout()">
+      Logout
+    </button>
+  </div>
+</nav>

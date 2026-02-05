@@ -1,0 +1,154 @@
+<h1>Kanban Board</h1>
+
+<div class="board">
+
+  <!-- ================= TO DO ================= -->
+  <div class="column"
+       cdkDropList
+       #todoList="cdkDropList"
+       [cdkDropListData]="todo"
+       [cdkDropListConnectedTo]="[inprogressList]"
+       (cdkDropListDropped)="drop($event, 'todo')">
+
+    <h3>New Task</h3>
+
+    <div class="task"
+         *ngFor="let task of todo"
+         [class.expired]="isExpired(task.dueDate)"
+         cdkDrag>
+
+      <div class="task-content">
+
+        <!-- VIEW MODE -->
+        <div *ngIf="editingTaskId !== task.id">
+          <div class="task-title">{{ task.title }}</div>
+          <small *ngIf="task.dueDate" class="due-date">
+            Due: {{ task.dueDate | date:'dd MMM yyyy' }}
+          </small>
+        </div>
+
+        <!-- EDIT MODE -->
+        <div *ngIf="editingTaskId === task.id" class="edit-box">
+          <input type="text" [(ngModel)]="editTitle" />
+          <input type="date" [(ngModel)]="editDueDate" />
+
+          <div class="todo-actions">
+            <button class="add" (click)="saveEdit(task)">Save</button>
+            <button class="cancel" (click)="cancelEdit()">Cancel</button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ACTIONS -->
+      <div class="task-actions">
+        <button class="edit-btn" (click)="startEdit(task)">Edit</button>
+        <button class="task-delete"
+                (click)="confirmRemoveTask(task, 'todo')">Delete</button>
+      </div>
+
+    </div>
+
+    <!-- Inline Add -->
+    <div class="todo-input" *ngIf="showTodoInput">
+      <input type="text"
+             placeholder="Enter task title"
+             [(ngModel)]="todoTaskTitle" />
+      <input type="date" [(ngModel)]="todoTaskDueDate" />
+
+      <div class="todo-actions">
+        <button class="add" (click)="addTodoTask()">Add</button>
+        <button class="cancel" (click)="cancelTodoInput()">Cancel</button>
+      </div>
+    </div>
+
+    <button class="add-task-btn"
+            *ngIf="!showTodoInput"
+            (click)="openTodoInput()">
+      + Add Task
+    </button>
+
+  </div>
+
+  <!-- ================= IN PROGRESS ================= -->
+  <div class="column"
+       cdkDropList
+       #inprogressList="cdkDropList"
+       [cdkDropListData]="inprogress"
+       [cdkDropListConnectedTo]="[todoList, doneList]"
+       (cdkDropListDropped)="drop($event, 'inprogress')">
+
+    <h3>In Progress</h3>
+
+    <div class="task"
+         *ngFor="let task of inprogress"
+         cdkDrag>
+
+      <div class="task-content">
+        <div class="task-title">{{ task.title }}</div>
+        <small *ngIf="task.dueDate" class="due-date">
+          Due: {{ task.dueDate | date:'dd MMM yyyy' }}
+        </small>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- ================= COMPLETED ================= -->
+  <div class="column"
+       cdkDropList
+       #doneList="cdkDropList"
+       [cdkDropListData]="done"
+       [cdkDropListConnectedTo]="[inprogressList, deliveredList]"
+       (cdkDropListDropped)="drop($event, 'done')">
+
+    <h3>Completed</h3>
+
+    <div class="task"
+         *ngFor="let task of done"
+         cdkDrag>
+
+      <div class="task-content">
+        <div class="task-title">{{ task.title }}</div>
+        <small *ngIf="task.completedDate" class="completed-date">
+          Completed: {{ task.completedDate | date:'dd MMM yyyy' }}
+        </small>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- ================= DELIVERED ================= -->
+  <div class="column"
+       cdkDropList
+       #deliveredList="cdkDropList"
+       [cdkDropListData]="delivered"
+       [cdkDropListConnectedTo]="[]"
+       (cdkDropListDropped)="drop($event, 'delivered')">
+
+    <h3>Delivered</h3>
+
+    <div class="task delivered"
+         *ngFor="let task of delivered"
+         cdkDragDisabled="true">
+
+      <div class="task-content">
+        <div class="task-title">{{ task.title }}</div>
+        <small *ngIf="task.deliveredDate" class="delivered-date">
+          Delivered: {{ task.deliveredDate | date:'dd MMM yyyy' }}
+        </small>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<!-- ================= UNDO TOAST ================= -->
+<div class="undo-toast" *ngIf="showUndo">
+  Task deleted
+  <button (click)="undoDelete()">Undo</button>
+</div>

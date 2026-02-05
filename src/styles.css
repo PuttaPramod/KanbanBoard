@@ -1,1 +1,353 @@
-/* You can add global styles to this file, and also import other style files */
+/* =========================
+   GLOBAL OFFSET & RESET
+   ========================= */
+:root {
+  --navbar-height: 64px;
+  --primary-bg: #0f172a;
+  --primary-border: #1e293b;
+  --primary-text: #cbd5f5;
+  --primary-accent: #38bdf8;
+  --primary-hover: #1e293b;
+  --transition-speed: 0.3s;
+}
+
+body {
+  padding-top: var(--navbar-height);
+  margin: 0;
+  padding-right: 0; /* Compensated by JS for scrollbar */
+  transition: padding-right 0.3s ease;
+}
+
+/* =========================
+   NAVBAR BASE
+   ========================= */
+.navbar {
+  background: var(--primary-bg);
+  height: var(--navbar-height);
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1200;
+  border-bottom: 1px solid var(--primary-border);
+  display: flex;
+  align-items: center;
+  /* Prevent navbar from being hidden behind other fixed elements */
+  will-change: transform;
+}
+
+.nav-container {
+  max-width: 1200px;
+  margin: auto;
+  padding: 0 20px;
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 16px;
+}
+
+/* =========================
+   LEFT SECTION
+   ========================= */
+.nav-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0; /* Prevents flex overflow issues */
+}
+
+/* =========================
+   LOGO
+   ========================= */
+.logo {
+  font-size: 22px;
+  font-weight: 700;
+  color: white;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: opacity var(--transition-speed) ease;
+  cursor: pointer;
+  /* Improve tap target for mobile */
+  padding: 8px 4px;
+}
+
+.logo:hover {
+  opacity: 0.8;
+}
+
+.logo:focus-visible {
+  outline: 2px solid var(--primary-accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.logo span {
+  color: var(--primary-accent);
+}
+
+.logo.hide {
+  display: none;
+}
+
+/* =========================
+   NAV LINKS
+   ========================= */
+.nav-links {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+}
+
+.nav-links a {
+  color: var(--primary-text);
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 500;
+  position: relative;
+  transition: color var(--transition-speed) ease;
+  /* Better touch target */
+  padding: 8px 4px;
+}
+
+.nav-links a:hover {
+  color: white;
+}
+
+.nav-links a:focus-visible {
+  outline: 2px solid var(--primary-accent);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+.nav-links a.active {
+  color: white;
+}
+
+.nav-links a.active::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -8px;
+  width: 100%;
+  height: 2px;
+  background: var(--primary-accent);
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    width: 0;
+    left: 50%;
+  }
+  to {
+    width: 100%;
+    left: 0;
+  }
+}
+
+/* =========================
+   LOGOUT BUTTON
+   ========================= */
+.logout-btn {
+  background: transparent;
+  border: 1px solid #334155;
+  color: #e5e7eb;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-speed) ease;
+  /* Better touch target */
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+
+.logout-btn:hover {
+  background: var(--primary-hover);
+  border-color: var(--primary-accent);
+  color: white;
+}
+
+.logout-btn:focus-visible {
+  outline: 2px solid var(--primary-accent);
+  outline-offset: 2px;
+}
+
+.logout-btn:active {
+  transform: scale(0.98);
+}
+
+/* =========================
+   HAMBURGER
+   ========================= */
+.hamburger {
+  display: none;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 28px;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 4px;
+  transition: background-color var(--transition-speed) ease;
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.hamburger:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.hamburger:focus-visible {
+  outline: 2px solid var(--primary-accent);
+  outline-offset: 2px;
+}
+
+.hamburger[aria-expanded="true"] {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* =========================
+   DESKTOP (≥1025px)
+   ========================= */
+@media (min-width: 1025px) {
+  .hamburger {
+    display: none !important;
+  }
+
+  .desktop-logout {
+    display: block;
+  }
+
+  .mobile-logout {
+    display: none;
+  }
+
+  .nav-links {
+    position: static;
+    transform: none;
+  }
+}
+
+/* =========================
+   MOBILE & TABLET (≤1024px)
+   ========================= */
+@media (max-width: 1024px) {
+  .nav-container {
+    grid-template-columns: auto auto;
+  }
+
+  .hamburger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .desktop-logout {
+    display: none;
+  }
+
+  /* Overlay menu with smooth animations */
+  .nav-links {
+    position: fixed;
+    top: var(--navbar-height);
+    left: 0;
+    width: 100%;
+    height: calc(100vh - var(--navbar-height));
+    background: var(--primary-bg);
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    padding-top: 24px;
+    gap: 0;
+    transform: translateX(-100%);
+    transition: transform var(--transition-speed) ease;
+    z-index: 1100;
+    /* Prevent interactive elements below menu */
+    pointer-events: none;
+    overflow-y: auto;
+  }
+
+  .nav-links.open {
+    transform: translateX(0);
+    pointer-events: auto;
+  }
+
+  .nav-links a {
+    font-size: 16px;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--primary-border);
+    position: relative;
+    margin: 0;
+  }
+
+  .nav-links a.active {
+    background: rgba(56, 189, 248, 0.1);
+  }
+
+  .nav-links a.active::after {
+    left: 0;
+    bottom: 0;
+    width: 4px;
+    height: 100%;
+  }
+
+  .nav-links a:hover {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .mobile-logout {
+    display: block;
+    margin: 16px;
+    margin-top: auto;
+  }
+
+  /* Prevent scrolling when menu open - handled by JS */
+  body.menu-open {
+    overflow: hidden;
+  }
+}
+
+/* =========================
+   REDUCED MOTION (Accessibility)
+   ========================= */
+@media (prefers-reduced-motion: reduce) {
+  .navbar,
+  .nav-links,
+  .logo,
+  .nav-links a,
+  .logout-btn {
+    transition: none;
+    animation: none;
+  }
+}
+
+/* =========================
+   DARK MODE (Optional Enhancement)
+   ========================= */
+@media (prefers-color-scheme: dark) {
+  /* Already dark, but you can enhance for true dark displays */
+  .navbar {
+    background: var(--primary-bg);
+  }
+}
+
+/* =========================
+   HIGH CONTRAST (WCAG AAA)
+   ========================= */
+@media (prefers-contrast: more) {
+  .logo span,
+  .nav-links a.active::after,
+  .logout-btn:hover {
+    border-color: white;
+  }
+
+  .nav-links a:focus-visible,
+  .logout-btn:focus-visible,
+  .hamburger:focus-visible {
+    outline-width: 3px;
+  }
+}
