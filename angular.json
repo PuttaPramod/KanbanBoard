@@ -7,7 +7,7 @@
   },
   "newProjectRoot": "projects",
   "projects": {
-    "TaskFlow": {
+    "taskflow": {
       "projectType": "application",
       "schematics": {},
       "root": "",
@@ -66,10 +66,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "TaskFlow:build:production"
+              "buildTarget": "taskflow:build:production"
             },
             "development": {
-              "buildTarget": "TaskFlow:build:development"
+              "buildTarget": "taskflow:build:development"
             }
           },
           "defaultConfiguration": "development"
