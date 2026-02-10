@@ -1,6 +1,6 @@
-import { Component, ViewChild, ElementRef, HostListener, OnInit, OnDestroy } from '@angular/core';
+import { Component, ViewChild, ElementRef, HostListener, OnInit, OnDestroy, Inject, PLATFORM_ID } from '@angular/core';
 import { Router } from '@angular/router';
-import { CommonModule } from '@angular/common';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 
 interface NavItem {
@@ -30,7 +30,11 @@ export class NavbarComponent implements OnInit, OnDestroy {
   // Track initial scroll position to prevent jank
   private initialScrollY = 0;
 
-  constructor(private router: Router, private elementRef: ElementRef) {}
+  constructor(
+    private router: Router, 
+    private elementRef: ElementRef,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {}
 
   ngOnInit(): void {
     // Close menu on route changes
@@ -58,9 +62,11 @@ export class NavbarComponent implements OnInit, OnDestroy {
     
     // Set focus to first menu item for keyboard users (WCAG compliance)
     setTimeout(() => {
-      const firstMenuItem = this.navMenu?.nativeElement
-        .querySelector('[role="menuitem"]') as HTMLElement;
-      firstMenuItem?.focus();
+      if (isPlatformBrowser(this.platformId)) {
+        const firstMenuItem = this.navMenu?.nativeElement
+          ?.querySelector('[role="menuitem"]') as HTMLElement;
+        firstMenuItem?.focus();
+      }
     }, 0);
   }
 
@@ -70,7 +76,9 @@ export class NavbarComponent implements OnInit, OnDestroy {
     
     // Return focus to hamburger button (WCAG Focus Management)
     setTimeout(() => {
-      this.hamburgerBtn?.nativeElement?.focus();
+      if (isPlatformBrowser(this.platformId) && this.hamburgerBtn?.nativeElement) {
+        this.hamburgerBtn.nativeElement.focus();
+      }
     }, 0);
   }
 
@@ -97,6 +105,8 @@ export class NavbarComponent implements OnInit, OnDestroy {
   }
 
   private handleTabKey(event: KeyboardEvent): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+
     const menuElement = this.navMenu?.nativeElement;
     if (!menuElement) return;
 
@@ -126,27 +136,54 @@ export class NavbarComponent implements OnInit, OnDestroy {
   }
 
   private preventScroll(): void {
-    this.initialScrollY = window.scrollY;
-    document.body.style.overflow = 'hidden';
-    document.body.style.paddingRight = this.getScrollbarWidth() + 'px';
+    if (!isPlatformBrowser(this.platformId)) return;
+
+    try {
+      this.initialScrollY = window.scrollY || 0;
+      document.body.style.overflow = 'hidden';
+      document.body.style.paddingRight = this.getScrollbarWidth() + 'px';
+    } catch (e) {
+      console.warn('preventScroll failed:', e);
+    }
   }
 
-  private restoreScroll(): void {
-    document.body.style.overflow = '';
-    document.body.style.paddingRight = '';
-    window.scrollY = this.initialScrollY;
+  private restoreScroll(): void {  // ✅ FIXED - SSR SAFE
+    if (!isPlatformBrowser(this.platformId)) return;
+
+    try {
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+      
+      // Restore scroll position
+      if (window && window.scrollTo) {
+        window.scrollTo(0, this.initialScrollY);
+      }
+    } catch (e) {
+      console.warn('restoreScroll failed:', e);
+    }
   }
 
-  // Calculate scrollbar width to prevent layout shift
+  // Calculate scrollbar width to prevent layout shift - SSR SAFE
   private getScrollbarWidth(): number {
-    const outer = document.createElement('div');
-    outer.style.visibility = 'hidden';
-    outer.style.overflow = 'scroll';
-    document.body.appendChild(outer);
-    const inner = document.createElement('div');
-    outer.appendChild(inner);
-    const scrollbarWidth = outer.offsetWidth - inner.offsetWidth;
-    outer.parentNode?.removeChild(outer);
-    return scrollbarWidth;
+    if (!isPlatformBrowser(this.platformId)) return 0;
+
+    try {
+      const outer = document.createElement('div');
+      outer.style.visibility = 'hidden';
+      outer.style.overflow = 'scroll';
+      outer.style.position = 'absolute';
+      outer.style.top = '-9999px';
+      
+      document.body.appendChild(outer);
+      const inner = document.createElement('div');
+      outer.appendChild(inner);
+      const scrollbarWidth = outer.offsetWidth - inner.offsetWidth;
+      outer.parentNode?.removeChild(outer);
+      
+      return scrollbarWidth;
+    } catch (e) {
+      console.warn('getScrollbarWidth failed:', e);
+      return 0;
+    }
   }
 }

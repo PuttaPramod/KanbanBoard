@@ -1,0 +1,384 @@
+/* =====================================================
+   CLEAN PROFESSIONAL DASHBOARD - FULL WIDTH (NO GAPS)
+   ===================================================== */
+
+/* RESET */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:host {
+  display: block;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* =====================================================
+   CLEAN MODERN PALETTE
+   ===================================================== */
+:root {
+  /* Background */
+  --bg-primary: #f8fafc;
+  --bg-secondary: #ffffff;
+  --bg-card: #ffffff;
+  
+  /* Colors */
+  --primary: #1e40af;
+  --primary-hover: #1d4ed8;
+  --success: #059669;
+  --warning: #d97706;
+  --danger: #dc2626;
+  --purple: #7c3aed;
+  
+  /* Text */
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  
+  /* Borders & Shadows */
+  --border-color: #e2e8f0;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  
+  /* Radius */
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+
+/* =====================================================
+   FULL WIDTH LAYOUT - NO SIDE GAPS
+   ===================================================== */
+.dashboard-shell {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  padding: 2rem 0; /* ONLY TOP/BOTTOM PADDING */
+  width: 100vw;    /* FULL viewport width */
+  margin: 0;       /* NO margins */
+  overflow-x: hidden;
+}
+
+.dash-header {
+  background: var(--bg-secondary);
+  border-radius: 0; /* NO radius on edges */
+  padding: 2rem 2.5rem; /* KEEP internal padding */
+  margin-bottom: 2rem;
+  margin: 0 2.5rem; /* SAME as padding for alignment */
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid var(--border-color);
+  border-left: none;
+  border-right: none;
+  max-width: 100%;
+  width: calc(100% - 5rem); /* 2.5rem left + 2.5rem right */
+}
+
+/* =====================================================
+   FULL WIDTH GRIDS
+   ===================================================== */
+.dash-grid {
+  display: grid;
+  gap: 1.5rem;
+  margin: 0 2.5rem 2rem 2.5rem; /* SAME side margins as header */
+  width: calc(100% - 5rem);
+}
+
+.dash-grid-4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.dash-grid-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+/* =====================================================
+   BOTTOM SECTION - FULL WIDTH
+   ===================================================== */
+.dash-bottom {
+  display: grid;
+  grid-template-columns: 1.5fr 2.5fr;
+  gap: 2rem;
+  margin: 0 2.5rem 2rem 2.5rem; /* SAME side margins */
+  width: calc(100% - 5rem);
+}
+
+/* CARDS - FULL WIDTH ALIGNMENT */
+.dash-card {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  padding: 1.75rem;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.dash-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary), #3b82f6);
+}
+
+.dash-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+  border-color: #cbd5e1;
+}
+
+/* KEEP ALL OTHER STYLES THE SAME */
+.card-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+}
+
+.card-value {
+  font-size: clamp(2.25rem, 6vw, 3rem);
+  font-weight: 800;
+  line-height: 1;
+  color: var(--text-primary);
+}
+
+.card-meta {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+/* STATUS COLORS */
+.accent-inprogress { color: var(--warning); }
+.accent-done { color: var(--success); }
+.accent-delivered { color: var(--purple); }
+.accent-danger { 
+  color: var(--danger);
+  font-weight: 700;
+}
+.accent-today { 
+  color: #0ea5e9;
+  font-weight: 700;
+}
+.accent-week { 
+  color: var(--purple);
+  font-weight: 700;
+}
+
+/* COMPLETION CARD */
+.completion-card {
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+  border: 1px solid #bbf7d0;
+}
+
+.completion-card::before {
+  background: linear-gradient(90deg, var(--success), #34d399);
+}
+
+.completion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 1rem;
+}
+
+.completion-value {
+  font-size: 2.75rem;
+  font-weight: 800;
+  color: var(--success);
+  line-height: 1;
+}
+
+.completion-bar {
+  height: 12px;
+  border-radius: 6px;
+  background: #d1d5db;
+  overflow: hidden;
+  margin-top: 1rem;
+}
+
+.completion-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--success), #10b981, #059669);
+  border-radius: 6px;
+  transition: width 0.8s ease-out;
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+}
+
+/* RECENT TASKS */
+.recent-card {
+  background: var(--bg-card);
+  min-height: 240px;
+}
+
+.recent-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.recent-count {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  background: #f1f5f9;
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+}
+
+.recent-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.recent-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.recent-list::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 2px;
+}
+
+.recent-list li {
+  padding: 1rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.recent-list li:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  transform: translateX(4px);
+}
+
+.recent-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
+
+.recent-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  max-width: 70%;
+}
+
+.recent-status {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-pill);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.recent-status.todo { 
+  background: #dbeafe; 
+  color: #1e40af; 
+}
+.recent-status.inprogress { 
+  background: #fef3c7; 
+  color: var(--warning); 
+}
+.recent-status.done { 
+  background: #d1fae5; 
+  color: var(--success); 
+}
+.recent-status.delivered { 
+  background: #ede9fe; 
+  color: var(--purple); 
+}
+
+.recent-meta {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* =====================================================
+   PERFECT RESPONSIVE - FULL WIDTH
+   ===================================================== */
+@media (max-width: 1200px) {
+  .dash-grid-4 { 
+    grid-template-columns: repeat(2, 1fr); 
+  }
+  .dash-grid,
+  .dash-bottom,
+  .dash-header {
+    margin-left: 2rem !important;
+    margin-right: 2rem !important;
+    width: calc(100% - 4rem) !important;
+  }
+}
+
+@media (max-width: 1024px) {
+  .dash-grid-3 { 
+    grid-template-columns: repeat(2, 1fr); 
+  }
+  .dash-bottom { 
+    grid-template-columns: 1fr; 
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-shell { 
+    padding: 1.5rem 0; 
+  }
+  
+  .dash-header,
+  .dash-grid,
+  .dash-bottom {
+    margin-left: 1.5rem !important;
+    margin-right: 1.5rem !important;
+    width: calc(100% - 3rem) !important;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+  
+  .dash-grid-4,
+  .dash-grid-3 { 
+    grid-template-columns: repeat(2, 1fr); 
+    gap: 1.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .dash-header,
+  .dash-grid,
+  .dash-bottom {
+    margin-left: 1rem !important;
+    margin-right: 1rem !important;
+    width: calc(100% - 2rem) !important;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  .dash-grid-4,
+  .dash-grid-3 { 
+    grid-template-columns: 1fr; 
+  }
+}

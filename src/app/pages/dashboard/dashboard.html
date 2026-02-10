@@ -1,1 +1,114 @@
-<p>dashboard works!</p>
+<div class="dashboard-shell">
+  <!-- HEADER -->
+  <header class="dash-header">
+    <div class="dash-left">
+      <h1>Sprint Dashboard</h1>
+      <p class="dash-subtitle">
+        Overview of your Kanban tasks
+      </p>
+    </div>
+
+    <div class="dash-right">
+      <!-- change routerLink to your actual route for the board -->
+      <a class="dash-btn primary" routerLink="/tasks">
+        Go to Board
+      </a>
+    </div>
+  </header>
+
+  <!-- TOP SUMMARY CARDS -->
+  <section class="dash-grid dash-grid-4">
+    <article class="dash-card">
+      <div class="card-label">Total Tasks</div>
+      <div class="card-value">{{ totalTasks }}</div>
+      <div class="card-meta">All statuses</div>
+    </article>
+
+    <article class="dash-card">
+      <div class="card-label">In Progress</div>
+      <div class="card-value accent-inprogress">{{ inprogressCount }}</div>
+      <div class="card-meta">Currently being worked on</div>
+    </article>
+
+    <article class="dash-card">
+      <div class="card-label">Completed</div>
+      <div class="card-value accent-done">{{ doneCount }}</div>
+      <div class="card-meta">Moved to completed</div>
+    </article>
+
+    <article class="dash-card">
+      <div class="card-label">Delivered</div>
+      <div class="card-value accent-delivered">{{ deliveredCount }}</div>
+      <div class="card-meta">Shipped to stakeholder</div>
+    </article>
+  </section>
+
+  <!-- SECOND ROW: EXTRA METRICS -->
+  <section class="dash-grid dash-grid-3">
+    <article class="dash-card">
+      <div class="card-label">Overdue</div>
+      <div class="card-value accent-danger">{{ overdueCount }}</div>
+      <div class="card-meta">Due date passed</div>
+    </article>
+
+    <article class="dash-card">
+      <div class="card-label">Due Today</div>
+      <div class="card-value accent-today">{{ todayCount }}</div>
+      <div class="card-meta">Scheduled for today</div>
+    </article>
+
+    <article class="dash-card">
+      <div class="card-label">Due This Week</div>
+      <div class="card-value accent-week">{{ thisWeekCount }}</div>
+      <div class="card-meta">Within current week</div>
+    </article>
+  </section>
+
+  <!-- COMPLETION RATE + RECENT TASKS -->
+  <section class="dash-bottom">
+    <article class="dash-card completion-card">
+      <div class="completion-header">
+        <span class="card-label">Completion Rate</span>
+        <span class="completion-value">{{ completionRate }}%</span>
+      </div>
+      <div class="completion-bar">
+        <div
+          class="completion-fill"
+          [style.width.%]="completionRate"
+        ></div>
+      </div>
+      <p class="card-meta">
+        Based on completed + delivered tasks.
+      </p>
+    </article>
+
+    <article class="dash-card recent-card">
+      <div class="recent-header">
+        <span class="card-label">Recent Tasks</span>
+        <span class="recent-count">{{ recentTasks.length }} shown</span>
+      </div>
+
+      <ul class="recent-list" *ngIf="recentTasks.length; else noTasks">
+        <li *ngFor="let task of recentTasks">
+          <div class="recent-main">
+            <span class="recent-title">{{ task.title }}</span>
+            <span
+              class="recent-status"
+              [ngClass]="task.status"
+            >
+              {{ getStatusLabel(task) }}
+            </span>
+          </div>
+          <div class="recent-meta">
+            <span *ngIf="task.dueDate">Due {{ task.dueDate | date: 'dd MMM' }}</span>
+            <span *ngIf="!task.dueDate">No due date</span>
+          </div>
+        </li>
+      </ul>
+
+      <ng-template #noTasks>
+        <p class="card-meta">No tasks found. Create some in the board.</p>
+      </ng-template>
+    </article>
+  </section>
+</div>

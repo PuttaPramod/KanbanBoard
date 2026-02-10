@@ -1,154 +1,157 @@
-<h1>Kanban Board</h1>
+<div class="kanban-shell pro-layout">
+  <!-- TOP TOOLBAR -->
+  <header class="kanban-toolbar">
+    <div class="kt-left">
+      <h1>Kanban Board</h1>
+      <span class="kt-subtitle">Sprint · February 2026</span>
+    </div>
+    <div class="kt-right">
+      <button class="kt-btn ghost">Today</button>
+      <button class="kt-btn ghost">This Week</button>
+      <button class="kt-btn primary" (click)="openTodoInput()">+ New Task</button>
+    </div>
+  </header>
 
-<div class="board">
+  <!-- MAIN BOARD - CRITICAL: cdkDropListGroup REQUIRED -->
+  <main class="kanban-main">
+    <div class="board" cdkDropListGroup>
+      
+      <!-- ================================= TO DO ================================= -->
+      <div class="column"
+           cdkDropList
+           #todoList="cdkDropList"
+           [cdkDropListData]="todo"
+           [cdkDropListConnectedTo]="inprogressList"
+           (cdkDropListDropped)="drop($event, 'todo')">
 
-  <!-- ================= TO DO ================= -->
-  <div class="column"
-       cdkDropList
-       #todoList="cdkDropList"
-       [cdkDropListData]="todo"
-       [cdkDropListConnectedTo]="[inprogressList]"
-       (cdkDropListDropped)="drop($event, 'todo')">
+        <h3 [attr.data-count]="todo.length">New Task</h3>
 
-    <h3>New Task</h3>
+        <!-- Tasks -->
+        <div class="task-list">
+          <div class="task"
+               *ngFor="let task of todo; trackBy: trackByFn"
+               [class.expired]="isExpired(task.dueDate)"
+               cdkDrag>
 
-    <div class="task"
-         *ngFor="let task of todo"
-         [class.expired]="isExpired(task.dueDate)"
-         cdkDrag>
+            <!-- Content -->
+            <div class="task-content">
+              <!-- VIEW MODE -->
+              <div *ngIf="editingTaskId !== task.id">
+                <div class="task-title">{{task.title}}</div>
+                <small *ngIf="task.dueDate" class="due-date">
+                  Due: {{task.dueDate | date:'dd MMM yyyy'}}
+                </small>
+              </div>
 
-      <div class="task-content">
+              <!-- EDIT MODE -->
+              <div *ngIf="editingTaskId === task.id">
+                <input type="text" [(ngModel)]="editTitle" class="edit-input" />
+                <input type="date" [(ngModel)]="editDueDate" class="edit-input" />
+                <div class="edit-actions">
+                  <button (click)="saveEdit(task)" class="btn-save">Save</button>
+                  <button (click)="cancelEdit()" class="btn-cancel">Cancel</button>
+                </div>
+              </div>
+            </div>
 
-        <!-- VIEW MODE -->
-        <div *ngIf="editingTaskId !== task.id">
-          <div class="task-title">{{ task.title }}</div>
-          <small *ngIf="task.dueDate" class="due-date">
-            Due: {{ task.dueDate | date:'dd MMM yyyy' }}
-          </small>
-        </div>
-
-        <!-- EDIT MODE -->
-        <div *ngIf="editingTaskId === task.id" class="edit-box">
-          <input type="text" [(ngModel)]="editTitle" />
-          <input type="date" [(ngModel)]="editDueDate" />
-
-          <div class="todo-actions">
-            <button class="add" (click)="saveEdit(task)">Save</button>
-            <button class="cancel" (click)="cancelEdit()">Cancel</button>
+            <!-- Actions (hover only) -->
+            <div class="task-actions" *ngIf="editingTaskId !== task.id">
+              <button class="edit-btn" (click)="startEdit(task)">Edit</button>
+              <button class="delete-btn" (click)="confirmRemoveTask(task, 'todo')">
+                Delete
+              </button>
+            </div>
           </div>
         </div>
 
+        <!-- Add New Task -->
+        <div class="add-section" *ngIf="!showTodoInput" (click)="openTodoInput()">
+          <span>+ Add Task</span>
+        </div>
+        
+        <div class="add-form" *ngIf="showTodoInput">
+          <input type="text" [(ngModel)]="todoTaskTitle" placeholder="Task title" />
+          <input type="date" [(ngModel)]="todoTaskDueDate" />
+          <div class="form-actions">
+            <button (click)="addTodoTask()">Add</button>
+            <button (click)="cancelTodoInput()" class="cancel">Cancel</button>
+          </div>
+        </div>
       </div>
 
-      <!-- ACTIONS -->
-      <div class="task-actions">
-        <button class="edit-btn" (click)="startEdit(task)">Edit</button>
-        <button class="task-delete"
-                (click)="confirmRemoveTask(task, 'todo')">Delete</button>
+      <!-- ================================= IN PROGRESS ================================= -->
+      <div class="column"
+           cdkDropList
+           #inprogressList="cdkDropList"
+           [cdkDropListData]="inprogress"
+           [cdkDropListConnectedTo]="[todoList, doneList]"
+           (cdkDropListDropped)="drop($event, 'inprogress')">
+
+        <h3 [attr.data-count]="inprogress.length">In Progress</h3>
+
+        <div class="task-list">
+          <div class="task" *ngFor="let task of inprogress; trackBy: trackByFn" cdkDrag>
+            <div class="task-content">
+              <div class="task-title">{{task.title}}</div>
+              <small *ngIf="task.dueDate" class="due-date">
+                Due: {{task.dueDate | date:'dd MMM yyyy'}}
+              </small>
+            </div>
+          </div>
+        </div>
       </div>
 
+      <!-- ================================= COMPLETED ================================= -->
+      <div class="column"
+           cdkDropList
+           #doneList="cdkDropList"
+           [cdkDropListData]="done"
+           [cdkDropListConnectedTo]="[todoList, inprogressList, deliveredList]"
+           (cdkDropListDropped)="drop($event, 'done')">
+
+        <h3 [attr.data-count]="done.length">Completed</h3>
+
+        <div class="task-list">
+          <div class="task done-task" *ngFor="let task of done; trackBy: trackByFn" cdkDrag>
+            <div class="task-content">
+              <div class="task-title">{{task.title}}</div>
+              <small *ngIf="task.completedDate" class="completed-date">
+                Completed: {{task.completedDate | date:'dd MMM yyyy'}}
+              </small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================================= DELIVERED ================================= -->
+      <div class="column"
+           cdkDropList
+           #deliveredList="cdkDropList"
+           [cdkDropListData]="delivered"
+           [cdkDropListConnectedTo]="[todoList, inprogressList, doneList]"
+           (cdkDropListDropped)="drop($event, 'delivered')">
+
+        <h3 [attr.data-count]="delivered.length">Delivered</h3>
+
+        <div class="task-list">
+          <div class="task delivered-task" 
+               *ngFor="let task of delivered; trackBy: trackByFn" 
+               cdkDrag>
+            <div class="task-content">
+              <div class="task-title">{{task.title}}</div>
+              <small *ngIf="task.deliveredDate" class="delivered-date">
+                Delivered: {{task.deliveredDate | date:'dd MMM yyyy'}}
+              </small>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
+  </main>
 
-    <!-- Inline Add -->
-    <div class="todo-input" *ngIf="showTodoInput">
-      <input type="text"
-             placeholder="Enter task title"
-             [(ngModel)]="todoTaskTitle" />
-      <input type="date" [(ngModel)]="todoTaskDueDate" />
-
-      <div class="todo-actions">
-        <button class="add" (click)="addTodoTask()">Add</button>
-        <button class="cancel" (click)="cancelTodoInput()">Cancel</button>
-      </div>
-    </div>
-
-    <button class="add-task-btn"
-            *ngIf="!showTodoInput"
-            (click)="openTodoInput()">
-      + Add Task
-    </button>
-
+  <!-- UNDO TOAST -->
+  <div class="undo-toast" *ngIf="showUndo">
+    Task deleted
+    <button (click)="undoDelete()">Undo</button>
   </div>
-
-  <!-- ================= IN PROGRESS ================= -->
-  <div class="column"
-       cdkDropList
-       #inprogressList="cdkDropList"
-       [cdkDropListData]="inprogress"
-       [cdkDropListConnectedTo]="[todoList, doneList]"
-       (cdkDropListDropped)="drop($event, 'inprogress')">
-
-    <h3>In Progress</h3>
-
-    <div class="task"
-         *ngFor="let task of inprogress"
-         cdkDrag>
-
-      <div class="task-content">
-        <div class="task-title">{{ task.title }}</div>
-        <small *ngIf="task.dueDate" class="due-date">
-          Due: {{ task.dueDate | date:'dd MMM yyyy' }}
-        </small>
-      </div>
-
-    </div>
-
-  </div>
-
-  <!-- ================= COMPLETED ================= -->
-  <div class="column"
-       cdkDropList
-       #doneList="cdkDropList"
-       [cdkDropListData]="done"
-       [cdkDropListConnectedTo]="[inprogressList, deliveredList]"
-       (cdkDropListDropped)="drop($event, 'done')">
-
-    <h3>Completed</h3>
-
-    <div class="task"
-         *ngFor="let task of done"
-         cdkDrag>
-
-      <div class="task-content">
-        <div class="task-title">{{ task.title }}</div>
-        <small *ngIf="task.completedDate" class="completed-date">
-          Completed: {{ task.completedDate | date:'dd MMM yyyy' }}
-        </small>
-      </div>
-
-    </div>
-
-  </div>
-
-  <!-- ================= DELIVERED ================= -->
-  <div class="column"
-       cdkDropList
-       #deliveredList="cdkDropList"
-       [cdkDropListData]="delivered"
-       [cdkDropListConnectedTo]="[]"
-       (cdkDropListDropped)="drop($event, 'delivered')">
-
-    <h3>Delivered</h3>
-
-    <div class="task delivered"
-         *ngFor="let task of delivered"
-         cdkDragDisabled="true">
-
-      <div class="task-content">
-        <div class="task-title">{{ task.title }}</div>
-        <small *ngIf="task.deliveredDate" class="delivered-date">
-          Delivered: {{ task.deliveredDate | date:'dd MMM yyyy' }}
-        </small>
-      </div>
-
-    </div>
-
-  </div>
-
-</div>
-
-<!-- ================= UNDO TOAST ================= -->
-<div class="undo-toast" *ngIf="showUndo">
-  Task deleted
-  <button (click)="undoDelete()">Undo</button>
 </div>
