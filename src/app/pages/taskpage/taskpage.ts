@@ -210,7 +210,7 @@ export class TaskPage implements OnInit {
   }
 
   /* --- MODAL LOGIC --- */
-  openTaskModal(task?: Task) {
+  openTaskModal(task?: Task, defaultStatus?: string) {
     if (task) {
       this.editingTask = task;
       this.tempTask = { ...task };
@@ -221,7 +221,8 @@ export class TaskPage implements OnInit {
         description: '',
         priority: 'Medium',
         assignee: '',
-        dueDate: new Date().toISOString().split('T')[0]
+        dueDate: new Date().toISOString().split('T')[0],
+        status: defaultStatus ?? 'todo'
       };
     }
     this.isModalOpen = true;
@@ -242,10 +243,10 @@ export class TaskPage implements OnInit {
       const newTask: Task = {
         ...(this.tempTask as Task),
         id: `TSK-${Math.floor(Math.random() * 9000) + 1000}`,
-        status: 'todo',
+        status: (this.tempTask.status as string) ?? 'todo',
         description: this.tempTask.description ?? ''
       };
-      const list = this.getListByStatus('todo');
+      const list = this.getListByStatus(newTask.status);
       list.unshift(newTask);
     }
     this.saveToStorage();

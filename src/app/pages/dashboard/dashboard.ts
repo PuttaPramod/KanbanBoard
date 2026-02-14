@@ -12,6 +12,7 @@ import { RouterModule } from '@angular/router';
   styleUrls: ['./dashboard.css']
 })
 export class Dashboard implements OnInit {
+  dashboardModel: 'classic' | 'compact' | 'spotlight' = 'spotlight';
   totalTasks = 0;
   todoCount = 0;
   inprogressCount = 0;
@@ -28,8 +29,23 @@ export class Dashboard implements OnInit {
   ngOnInit(): void {
     if (typeof window !== 'undefined') {
       this.loadFromStorage();
+      this.loadModelFromStorage();
       this.computeMetrics();
     }
+  }
+
+  setModel(model: string) {
+    if (model === 'classic' || model === 'compact' || model === 'spotlight') {
+      this.dashboardModel = model;
+      try { localStorage.setItem('dashboard_model', model); } catch {}
+    }
+  }
+
+  private loadModelFromStorage(): void {
+    try {
+      const m = localStorage.getItem('dashboard_model');
+      if (m === 'classic' || m === 'compact' || m === 'spotlight') this.dashboardModel = m;
+    } catch {}
   }
 
   private loadFromStorage(): void {
