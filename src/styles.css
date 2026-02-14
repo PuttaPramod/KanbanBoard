@@ -1,3 +1,7 @@
+@import "tailwindcss";
+
+
+
 /* =========================
    GLOBAL OFFSET & RESET
    ========================= */
@@ -14,7 +18,8 @@
 body {
   padding-top: var(--navbar-height);
   margin: 0;
-  padding-right: 0; /* Compensated by JS for scrollbar */
+  padding-right: 0;
+  /* Compensated by JS for scrollbar */
   transition: padding-right 0.3s ease;
 }
 
@@ -54,7 +59,8 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
-  min-width: 0; /* Prevents flex overflow issues */
+  min-width: 0;
+  /* Prevents flex overflow issues */
 }
 
 /* =========================
@@ -140,6 +146,7 @@ body {
     width: 0;
     left: 50%;
   }
+
   to {
     width: 100%;
     left: 0;
@@ -315,6 +322,7 @@ body {
    REDUCED MOTION (Accessibility)
    ========================= */
 @media (prefers-reduced-motion: reduce) {
+
   .navbar,
   .nav-links,
   .logo,
@@ -329,6 +337,7 @@ body {
    DARK MODE (Optional Enhancement)
    ========================= */
 @media (prefers-color-scheme: dark) {
+
   /* Already dark, but you can enhance for true dark displays */
   .navbar {
     background: var(--primary-bg);
@@ -339,6 +348,7 @@ body {
    HIGH CONTRAST (WCAG AAA)
    ========================= */
 @media (prefers-contrast: more) {
+
   .logo span,
   .nav-links a.active::after,
   .logout-btn:hover {

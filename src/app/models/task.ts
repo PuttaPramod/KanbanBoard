@@ -1,10 +1,12 @@
 export interface Task {
-  id: number;
+  id: string;
   title: string;
   description?: string;
-  status: 'todo' | 'inprogress' | 'done' | 'delivered';
+  /** Column id (built-in: todo, inprogress, done, delivered; or custom-xxx) */
+  status: string;
+  priority: 'Low' | 'Medium' | 'High';
+  assignee: string;
   dueDate?: string;
   completedDate?: string;
   deliveredDate?: string;
-  priority?: 'low' | 'medium' | 'high';
 }

@@ -1,48 +1,32 @@
 import { Component, Inject, OnInit } from '@angular/core';
-import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { PLATFORM_ID } from '@angular/core';
 import { Task } from '../../models/task';
 import { RouterModule } from '@angular/router';
 
-interface StoredTasks {
-  todo: Task[];
-  inprogress: Task[];
-  done: Task[];
-  delivered: Task[];
-}
-
 @Component({
   selector: 'app-dashboard-page',
   standalone: true,
-  imports: [CommonModule,RouterModule],
+  imports: [CommonModule, RouterModule],
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.css']
 })
 export class Dashboard implements OnInit {
-  // Raw arrays from storage
-  todo: Task[] = [];
-  inprogress: Task[] = [];
-  done: Task[] = [];
-  delivered: Task[] = [];
-
-  // Metrics
   totalTasks = 0;
   todoCount = 0;
   inprogressCount = 0;
   doneCount = 0;
   deliveredCount = 0;
-
   overdueCount = 0;
   todayCount = 0;
   thisWeekCount = 0;
-  completionRate = 0; // in %
-
+  completionRate = 0;
   recentTasks: Task[] = [];
 
   constructor(@Inject(PLATFORM_ID) private platformId: Object) {}
 
   ngOnInit(): void {
-    if (isPlatformBrowser(this.platformId)) {
+    if (typeof window !== 'undefined') {
       this.loadFromStorage();
       this.computeMetrics();
     }
@@ -50,46 +34,44 @@ export class Dashboard implements OnInit {
 
   private loadFromStorage(): void {
     try {
-      const data = localStorage.getItem('kanban_tasks');
-      if (data) {
-        const parsed = JSON.parse(data) as StoredTasks;
-        this.todo = parsed.todo || [];
-        this.inprogress = parsed.inprogress || [];
-        this.done = parsed.done || [];
-        this.delivered = parsed.delivered || [];
+      const v2 = localStorage.getItem('kanban_pro_v2');
+      if (v2) {
+        const p = JSON.parse(v2);
+        const listByStatus: Record<string, Task[]> = p.listByStatus || {};
+        const all: Task[] = [];
+        Object.values(listByStatus).forEach((arr: unknown) => {
+          if (Array.isArray(arr)) all.push(...arr);
+        });
+        this.recentTasks = all;
+        return;
       }
-    } catch (error) {
-      console.warn('Failed to load from localStorage:', error);
-      this.todo = [];
-      this.inprogress = [];
-      this.done = [];
-      this.delivered = [];
+      const v1 = localStorage.getItem('kanban_pro_v1');
+      if (v1) {
+        const p = JSON.parse(v1);
+        const todo = p.todo || [];
+        const inprogress = p.inprogress || [];
+        const done = p.done || [];
+        const delivered = p.delivered || [];
+        this.recentTasks = [...todo, ...inprogress, ...done, ...delivered];
+      }
+    } catch {
+      this.recentTasks = [];
     }
   }
 
   private computeMetrics(): void {
-    this.todoCount = this.todo.length;
-    this.inprogressCount = this.inprogress.length;
-    this.doneCount = this.done.length;
-    this.deliveredCount = this.delivered.length;
-
-    this.totalTasks =
-      this.todoCount + this.inprogressCount + this.doneCount + this.deliveredCount;
-
-    // Overdue, Today, This Week (based on dueDate)
-    const allTasks: Task[] = [
-      ...this.todo,
-      ...this.inprogress,
-      ...this.done,
-      ...this.delivered
-    ];
+    const all = this.recentTasks;
+    this.todoCount = all.filter(t => t.status === 'todo').length;
+    this.inprogressCount = all.filter(t => t.status === 'inprogress').length;
+    this.doneCount = all.filter(t => t.status === 'done').length;
+    this.deliveredCount = all.filter(t => t.status === 'delivered').length;
+    this.totalTasks = all.length;
 
     const today = new Date();
     const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
     const todayEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999);
-
     const startOfWeek = new Date(todayStart);
-    startOfWeek.setDate(todayStart.getDate() - todayStart.getDay()); // Sunday
+    startOfWeek.setDate(todayStart.getDate() - todayStart.getDay());
     const endOfWeek = new Date(startOfWeek);
     endOfWeek.setDate(startOfWeek.getDate() + 6);
     endOfWeek.setHours(23, 59, 59, 999);
@@ -97,46 +79,40 @@ export class Dashboard implements OnInit {
     this.overdueCount = 0;
     this.todayCount = 0;
     this.thisWeekCount = 0;
-
-    allTasks.forEach(task => {
+    all.forEach(task => {
       if (!task.dueDate) return;
-      const d = new Date(task.dueDate);
-
-      if (d < todayStart) {
-        this.overdueCount++;
-      }
-      if (d >= todayStart && d <= todayEnd) {
-        this.todayCount++;
-      }
-      if (d >= startOfWeek && d <= endOfWeek) {
-        this.thisWeekCount++;
-      }
+      const d = new Date(task.dueDate + 'T00:00:00');
+      if (d < todayStart) this.overdueCount++;
+      if (d >= todayStart && d <= todayEnd) this.todayCount++;
+      if (d >= startOfWeek && d <= endOfWeek) this.thisWeekCount++;
     });
 
-    // Completion rate: done + delivered vs total
     const completedTotal = this.doneCount + this.deliveredCount;
-    this.completionRate =
-      this.totalTasks > 0 ? Math.round((completedTotal / this.totalTasks) * 100) : 0;
+    this.completionRate = this.totalTasks > 0 ? Math.round((completedTotal / this.totalTasks) * 100) : 0;
 
-    // Recent tasks: sort by id desc (since you used Date.now() as id)
-    this.recentTasks = allTasks
+    this.recentTasks = all
       .slice()
-      .sort((a, b) => b.id - a.id)
-      .slice(0, 6);
+      .sort((a, b) => (b.id || '').localeCompare(a.id || ''))
+      .slice(0, 8);
   }
 
   getStatusLabel(task: Task): string {
     switch (task.status) {
-      case 'todo':
-        return 'New';
-      case 'inprogress':
-        return 'In Progress';
-      case 'done':
-        return 'Completed';
-      case 'delivered':
-        return 'Delivered';
-      default:
-        return task.status;
+      case 'todo': return 'To Do';
+      case 'inprogress': return 'In Progress';
+      case 'done': return 'Completed';
+      case 'delivered': return 'Delivered';
+      default: return (task.status?.startsWith('custom-') ? 'Custom' : task.status) || 'Other';
+    }
+  }
+
+  getStatusClass(task: Task): string {
+    switch (task.status) {
+      case 'todo': return 'todo';
+      case 'inprogress': return 'inprogress';
+      case 'done': return 'done';
+      case 'delivered': return 'delivered';
+      default: return 'custom';
     }
   }
 }

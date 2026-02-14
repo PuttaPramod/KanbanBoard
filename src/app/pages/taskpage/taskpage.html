@@ -1,157 +1,219 @@
-<div class="kanban-shell pro-layout">
-  <!-- TOP TOOLBAR -->
+<div class="kanban-shell">
+  <!-- Top bar -->
   <header class="kanban-toolbar">
     <div class="kt-left">
-      <h1>Kanban Board</h1>
-      <span class="kt-subtitle">Sprint · February 2026</span>
+      <div class="brand-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 7h10M7 12h10M7 17h10"/></svg>
+      </div>
+      <div class="brand-text">
+        <h1 class="app-title">Interactive Kanban Task and Workflow
+          Management</h1>
+        <span class="app-tagline">Workflow Board</span>
+      </div>
     </div>
     <div class="kt-right">
-      <button class="kt-btn ghost">Today</button>
-      <button class="kt-btn ghost">This Week</button>
-      <button class="kt-btn primary" (click)="openTodoInput()">+ New Task</button>
+      <button type="button" class="btn-add-column" (click)="openAddColumnModal()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M12 8v8M8 12h8"/></svg>
+        <span class="text">Add Column</span>
+      </button>
+      <button class="btn-create" (click)="openTaskModal()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <span class="text">Create Task</span>
+      </button>
     </div>
   </header>
 
-  <!-- MAIN BOARD - CRITICAL: cdkDropListGroup REQUIRED -->
+  <!-- Search & filters -->
+  <div class="kanban-filters">
+    <div class="filter-stats">
+      <span class="stats-text">{{ totalTaskCount }} tasks</span>
+      @if (overdueTaskCount > 0) {
+        <span class="stats-badge overdue">{{ overdueTaskCount }} overdue</span>
+      }
+    </div>
+    <div class="search-wrap">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input class="search-input" type="search" placeholder="Search tasks…" [(ngModel)]="searchQuery" (ngModelChange)="onSearchChange()">
+    </div>
+    <div class="filter-group">
+      <span class="filter-label">Priority</span>
+      <select class="filter-select" [(ngModel)]="priorityFilter" (ngModelChange)="onFilterChange()">
+        <option value="">All</option>
+        <option value="High">High</option>
+        <option value="Medium">Medium</option>
+        <option value="Low">Low</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <span class="filter-label">Assignee</span>
+      <select class="filter-select" [(ngModel)]="assigneeFilter" (ngModelChange)="onAssigneeFilterChange()">
+        <option value="">All</option>
+        @for (name of assigneeOptions; track name) {
+          <option [value]="name">{{ name }}</option>
+        }
+      </select>
+    </div>
+    @if (hasActiveFilters) {
+      <button type="button" class="btn-clear-filters" (click)="clearFilters()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        Clear filters
+      </button>
+    }
+  </div>
+
+  <!-- Board -->
   <main class="kanban-main">
     <div class="board" cdkDropListGroup>
-      
-      <!-- ================================= TO DO ================================= -->
-      <div class="column"
-           cdkDropList
-           #todoList="cdkDropList"
-           [cdkDropListData]="todo"
-           [cdkDropListConnectedTo]="inprogressList"
-           (cdkDropListDropped)="drop($event, 'todo')">
+      @for (col of columns; track col.id) {
+        <div class="column" [class]="'col-' + col.id" [class.col-custom]="isColumnCustom(col)">
+          <div class="column-header">
+            <div class="title-group">
+              <span class="status-dot"></span>
+              @if (editingColumnId === col.id) {
+                <div class="column-title-edit">
+                  <input type="text" [(ngModel)]="editingColumnTitle" (keydown.enter)="saveEditColumn()" (keydown.escape)="cancelEditColumn()" class="column-title-input">
+                  <button type="button" class="col-action save" (click)="saveEditColumn()" title="Save">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                  </button>
+                  <button type="button" class="col-action cancel" (click)="cancelEditColumn()" title="Cancel">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </button>
+                </div>
+              } @else {
+                <h3 class="column-title-text">{{ col.title }}</h3>
+                <div class="column-actions">
+                  <button type="button" class="col-action edit" (click)="startEditColumn(col)" title="Edit column name">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  </button>
+                  @if (isColumnCustom(col)) {
+                    <button type="button" class="col-action delete" (click)="deleteColumn(col)" title="Delete column">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                    </button>
+                  }
+                </div>
+              }
+            </div>
+            <span class="count-pill">{{ getFilteredCount(col.id) }}</span>
+          </div>
 
-        <h3 [attr.data-count]="todo.length">New Task</h3>
-
-        <!-- Tasks -->
-        <div class="task-list">
-          <div class="task"
-               *ngFor="let task of todo; trackBy: trackByFn"
-               [class.expired]="isExpired(task.dueDate)"
-               cdkDrag>
-
-            <!-- Content -->
-            <div class="task-content">
-              <!-- VIEW MODE -->
-              <div *ngIf="editingTaskId !== task.id">
-                <div class="task-title">{{task.title}}</div>
-                <small *ngIf="task.dueDate" class="due-date">
-                  Due: {{task.dueDate | date:'dd MMM yyyy'}}
-                </small>
-              </div>
-
-              <!-- EDIT MODE -->
-              <div *ngIf="editingTaskId === task.id">
-                <input type="text" [(ngModel)]="editTitle" class="edit-input" />
-                <input type="date" [(ngModel)]="editDueDate" class="edit-input" />
-                <div class="edit-actions">
-                  <button (click)="saveEdit(task)" class="btn-save">Save</button>
-                  <button (click)="cancelEdit()" class="btn-cancel">Cancel</button>
+          <div class="task-list"
+               cdkDropList
+               [id]="col.id"
+               [cdkDropListData]="getListByStatus(col.id)"
+               (cdkDropListDropped)="drop($event, col.id)">
+            @for (task of getListByStatus(col.id); track task.id) {
+              <div class="task-card" cdkDrag [hidden]="!matchesFilter(task)" (dblclick)="openTaskModal(task); $event.stopPropagation()" title="Double-click to edit">
+                <div class="card-header">
+                  <span class="task-id">{{ task.id }}</span>
+                  <span class="priority-tag" [attr.data-prio]="task.priority">{{ task.priority }}</span>
+                </div>
+                <div class="task-body">{{ task.title }}</div>
+                @if (task.description) {
+                  <div class="task-desc">{{ task.description }}</div>
+                }
+                <div class="card-footer">
+                  <div class="meta-info">
+                    <span class="date-badge" [class.overdue]="isExpired(task.dueDate)" [class.due-soon]="isDueSoon(task.dueDate) && !isExpired(task.dueDate)">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                      {{ task.dueDate | date:'MMM d' }}
+                    </span>
+                  </div>
+                  <div class="user-avatar" [title]="task.assignee">
+                    {{ task.assignee ? task.assignee[0].toUpperCase() : '?' }}
+                  </div>
+                </div>
+                <div class="card-actions">
+                  <button type="button" class="action-btn edit" (click)="openTaskModal(task); $event.stopPropagation()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  </button>
+                  <button type="button" class="action-btn delete" (click)="confirmRemoveTask(task, col.id); $event.stopPropagation()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  </button>
                 </div>
               </div>
-            </div>
-
-            <!-- Actions (hover only) -->
-            <div class="task-actions" *ngIf="editingTaskId !== task.id">
-              <button class="edit-btn" (click)="startEdit(task)">Edit</button>
-              <button class="delete-btn" (click)="confirmRemoveTask(task, 'todo')">
-                Delete
-              </button>
-            </div>
+            }
+            @if (getFilteredCount(col.id) === 0 && getListByStatus(col.id).length > 0) {
+              <div class="column-empty">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                <p>No tasks match current filters</p>
+              </div>
+            }
+            @if (getListByStatus(col.id).length === 0) {
+              <div class="column-empty">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M12 8v8M8 12h8"/></svg>
+                <p>No tasks yet</p>
+                <p style="font-size: 0.75rem; margin-top: 4px;">Drag here or create a new task</p>
+              </div>
+            }
           </div>
         </div>
-
-        <!-- Add New Task -->
-        <div class="add-section" *ngIf="!showTodoInput" (click)="openTodoInput()">
-          <span>+ Add Task</span>
-        </div>
-        
-        <div class="add-form" *ngIf="showTodoInput">
-          <input type="text" [(ngModel)]="todoTaskTitle" placeholder="Task title" />
-          <input type="date" [(ngModel)]="todoTaskDueDate" />
-          <div class="form-actions">
-            <button (click)="addTodoTask()">Add</button>
-            <button (click)="cancelTodoInput()" class="cancel">Cancel</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- ================================= IN PROGRESS ================================= -->
-      <div class="column"
-           cdkDropList
-           #inprogressList="cdkDropList"
-           [cdkDropListData]="inprogress"
-           [cdkDropListConnectedTo]="[todoList, doneList]"
-           (cdkDropListDropped)="drop($event, 'inprogress')">
-
-        <h3 [attr.data-count]="inprogress.length">In Progress</h3>
-
-        <div class="task-list">
-          <div class="task" *ngFor="let task of inprogress; trackBy: trackByFn" cdkDrag>
-            <div class="task-content">
-              <div class="task-title">{{task.title}}</div>
-              <small *ngIf="task.dueDate" class="due-date">
-                Due: {{task.dueDate | date:'dd MMM yyyy'}}
-              </small>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ================================= COMPLETED ================================= -->
-      <div class="column"
-           cdkDropList
-           #doneList="cdkDropList"
-           [cdkDropListData]="done"
-           [cdkDropListConnectedTo]="[todoList, inprogressList, deliveredList]"
-           (cdkDropListDropped)="drop($event, 'done')">
-
-        <h3 [attr.data-count]="done.length">Completed</h3>
-
-        <div class="task-list">
-          <div class="task done-task" *ngFor="let task of done; trackBy: trackByFn" cdkDrag>
-            <div class="task-content">
-              <div class="task-title">{{task.title}}</div>
-              <small *ngIf="task.completedDate" class="completed-date">
-                Completed: {{task.completedDate | date:'dd MMM yyyy'}}
-              </small>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ================================= DELIVERED ================================= -->
-      <div class="column"
-           cdkDropList
-           #deliveredList="cdkDropList"
-           [cdkDropListData]="delivered"
-           [cdkDropListConnectedTo]="[todoList, inprogressList, doneList]"
-           (cdkDropListDropped)="drop($event, 'delivered')">
-
-        <h3 [attr.data-count]="delivered.length">Delivered</h3>
-
-        <div class="task-list">
-          <div class="task delivered-task" 
-               *ngFor="let task of delivered; trackBy: trackByFn" 
-               cdkDrag>
-            <div class="task-content">
-              <div class="task-title">{{task.title}}</div>
-              <small *ngIf="task.deliveredDate" class="delivered-date">
-                Delivered: {{task.deliveredDate | date:'dd MMM yyyy'}}
-              </small>
-            </div>
-          </div>
-        </div>
-      </div>
+      }
     </div>
   </main>
 
-  <!-- UNDO TOAST -->
-  <div class="undo-toast" *ngIf="showUndo">
-    Task deleted
-    <button (click)="undoDelete()">Undo</button>
-  </div>
+  <!-- Modal -->
+  @if (isModalOpen) {
+    <div class="modal-overlay" (click)="closeModal()">
+      <div class="modal-window" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>{{ editingTask ? 'Edit Task' : 'Create New Task' }}</h2>
+          <button type="button" class="close-btn" (click)="closeModal()" aria-label="Close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="input-group full">
+            <label>Task Summary</label>
+            <input [(ngModel)]="tempTask.title" type="text" placeholder="e.g. Implement OAuth2 Login">
+          </div>
+          <div class="input-group full">
+            <label>Description (optional)</label>
+            <textarea [(ngModel)]="tempTask.description" placeholder="Add details, acceptance criteria…" rows="3"></textarea>
+          </div>
+          <div class="input-row">
+            <div class="input-group">
+              <label>Priority</label>
+              <select [(ngModel)]="tempTask.priority">
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label>Due Date</label>
+              <input [(ngModel)]="tempTask.dueDate" type="date">
+            </div>
+          </div>
+          <div class="input-group full">
+            <label>Assignee</label>
+            <input [(ngModel)]="tempTask.assignee" type="text" placeholder="Member name">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" (click)="closeModal()">Cancel</button>
+          <button type="button" class="btn-save" (click)="saveTask()">Save Task</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Add Column modal -->
+  @if (isAddColumnModalOpen) {
+    <div class="modal-overlay" (click)="closeAddColumnModal()">
+      <div class="modal-window modal-add-column" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>Add Column</h2>
+          <button type="button" class="close-btn" (click)="closeAddColumnModal()" aria-label="Close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="input-group full">
+            <label>Column name</label>
+            <input [(ngModel)]="newColumnTitle" type="text" placeholder="e.g. In Review" (keydown.enter)="saveNewColumn()">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" (click)="closeAddColumnModal()">Cancel</button>
+          <button type="button" class="btn-save" (click)="saveNewColumn()">Add Column</button>
+        </div>
+      </div>
+    </div>
+  }
 </div>

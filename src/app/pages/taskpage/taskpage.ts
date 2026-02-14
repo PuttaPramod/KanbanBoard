@@ -1,14 +1,20 @@
-import { Component, OnInit, Inject, ViewChild, ChangeDetectorRef, TrackByFunction } from '@angular/core';
+import { Component, OnInit, Inject, PLATFORM_ID, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
   DragDropModule,
   CdkDragDrop,
   moveItemInArray,
-  transferArrayItem,
-  CdkDropList} from '@angular/cdk/drag-drop';
-import { PLATFORM_ID } from '@angular/core';
+  transferArrayItem
+} from '@angular/cdk/drag-drop';
 import { Task } from '../../models/task';
+
+const DEFAULT_COLUMNS = [
+  { id: 'todo', title: 'To Do' },
+  { id: 'inprogress', title: 'In Progress' },
+  { id: 'done', title: 'Completed' },
+  { id: 'delivered', title: 'Delivered' }
+] as const;
 
 @Component({
   selector: 'app-task-page',
@@ -18,218 +24,305 @@ import { Task } from '../../models/task';
   styleUrls: ['./taskpage.css']
 })
 export class TaskPage implements OnInit {
-  /* ---------- UI STATE ---------- */
-  showTodoInput = false;
-  todoTaskTitle = '';
-  todoTaskDueDate = '';
-  editingTaskId: number | null = null;
-  editTitle = '';
-  editDueDate = '';
+  // Task lists keyed by column id (supports built-in + custom columns)
+  listByStatus: Record<string, Task[]> = {
+    todo: [],
+    inprogress: [],
+    done: [],
+    delivered: []
+  };
+
+  // Modal State
+  isModalOpen = false;
+  editingTask: Task | null = null;
+  tempTask: Partial<Task> = {};
+  
+  // UI State
+  viewMode: 'all' | 'today' = 'all';
   showUndo = false;
-  lastDeletedTask: Task | null = null;
-  lastDeletedStatus: Task['status'] | null = null;
+  searchQuery = '';
+  priorityFilter: '' | Task['priority'] = '';
+  assigneeFilter = '';
 
-  /* ---------- TASK LISTS ---------- */
-  todo: Task[] = [];
-  inprogress: Task[] = [];
-  done: Task[] = [];
-  delivered: Task[] = [];
+  columns: { id: string; title: string }[] = [...DEFAULT_COLUMNS];
 
-  /* ---------- CDK REFERENCES ---------- */
-  @ViewChild('todoList', { static: false }) todoList!: CdkDropList<Task[]>;
-  @ViewChild('inprogressList', { static: false }) inprogressList!: CdkDropList<Task[]>;
-  @ViewChild('doneList', { static: false }) doneList!: CdkDropList<Task[]>;
-  @ViewChild('deliveredList', { static: false }) deliveredList!: CdkDropList<Task[]>;
-  trackByFn!: TrackByFunction<Task>;
+  // Add column modal
+  isAddColumnModalOpen = false;
+  newColumnTitle = '';
+
+  // Edit column inline
+  editingColumnId: string | null = null;
+  editingColumnTitle = '';
 
   constructor(
     @Inject(PLATFORM_ID) private platformId: Object,
     private cdr: ChangeDetectorRef
   ) {}
 
-  /* ---------- LIFECYCLE ---------- */
   ngOnInit(): void {
     if (isPlatformBrowser(this.platformId)) {
       this.loadFromStorage();
     }
   }
-
-  /* ---------- UTIL ---------- */
   isExpired(dueDate?: string): boolean {
     if (!dueDate) return false;
-    return new Date(dueDate) < new Date();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const d = new Date(dueDate + 'T00:00:00');
+    return d < today;
   }
 
-  /* ---------- ADD TASK ---------- */
-  openTodoInput() {
-    this.showTodoInput = true;
-    this.cdr.detectChanges(); // Ensure UI updates
+  /** Due within the next 3 days (excluding today if not overdue) */
+  isDueSoon(dueDate?: string): boolean {
+    if (!dueDate || this.isExpired(dueDate)) return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const due = new Date(dueDate + 'T00:00:00');
+    const daysUntil = Math.ceil((due.getTime() - today.getTime()) / (24 * 60 * 60 * 1000));
+    return daysUntil >= 1 && daysUntil <= 3;
   }
 
-  cancelTodoInput() {
-    this.showTodoInput = false;
-    this.todoTaskTitle = '';
-    this.todoTaskDueDate = '';
-  }
-
-  addTodoTask() {
-    if (!this.todoTaskTitle.trim()) return;
-
-    const newTask: Task = {
-      id: Date.now(),
-      title: this.todoTaskTitle.trim(),
-      description: '',
-      status: 'todo',
-      dueDate: this.todoTaskDueDate || undefined
-    };
-
-    this.todo.push(newTask);
-    this.cancelTodoInput();
-    this.saveToStorage();
-  }
-
-  /* ---------- EDIT TASK ---------- */
-  startEdit(task: Task) {
-    this.editingTaskId = task.id;
-    this.editTitle = task.title;
-    this.editDueDate = task.dueDate || '';
-    this.cdr.detectChanges();
-  }
-
-  cancelEdit() {
-    this.editingTaskId = null;
-    this.editTitle = '';
-    this.editDueDate = '';
-  }
-
-  saveEdit(task: Task) {
-    if (!this.editTitle.trim()) return;
-
-    task.title = this.editTitle.trim();
-    task.dueDate = this.editDueDate || undefined;
-    this.cancelEdit();
-    this.saveToStorage();
-  }
-
-  /* ---------- DELETE + UNDO ---------- */
-  confirmRemoveTask(task: Task, status: Task['status']) {
-    if (confirm('Are you sure you want to delete this task?')) {
-      this.removeTask(task, status);
+  matchesFilter(task: Task): boolean {
+    const q = this.searchQuery.trim().toLowerCase();
+    if (q) {
+      const matchTitle = task.title.toLowerCase().includes(q);
+      const matchDesc = (task.description ?? '').toLowerCase().includes(q);
+      const matchId = task.id.toLowerCase().includes(q);
+      const matchAssignee = (task.assignee ?? '').toLowerCase().includes(q);
+      if (!matchTitle && !matchDesc && !matchId && !matchAssignee) return false;
     }
+    if (this.priorityFilter && task.priority !== this.priorityFilter) return false;
+    if (this.assigneeFilter && (task.assignee ?? '').toLowerCase() !== this.assigneeFilter.toLowerCase()) return false;
+    return true;
   }
 
-  removeTask(task: Task, status: Task['status']) {
-    this.lastDeletedTask = { ...task }; // Clone to avoid reference issues
-    this.lastDeletedStatus = status;
-    this.showUndo = true;
+  get assigneeOptions(): string[] {
+    const set = new Set<string>();
+    this.columns.forEach(col => {
+      this.getListByStatus(col.id).forEach(t => {
+        if (t.assignee?.trim()) set.add(t.assignee.trim());
+      });
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }
 
-    const list = this.getListByStatus(status);
-    const index = list.findIndex(t => t.id === task.id);
-    if (index > -1) {
-      list.splice(index, 1);
+  get totalTaskCount(): number {
+    return this.columns.reduce((sum, col) => sum + this.getListByStatus(col.id).length, 0);
+  }
+
+  get overdueTaskCount(): number {
+    let count = 0;
+    this.columns.forEach(col => {
+      this.getListByStatus(col.id).forEach(t => {
+        if (this.isExpired(t.dueDate)) count++;
+      });
+    });
+    return count;
+  }
+
+  get hasActiveFilters(): boolean {
+    return !!(this.searchQuery.trim() || this.priorityFilter || this.assigneeFilter);
+  }
+
+  clearFilters(): void {
+    this.searchQuery = '';
+    this.priorityFilter = '';
+    this.assigneeFilter = '';
+    this.cdr.markForCheck();
+  }
+
+  getFilteredCount(status: string): number {
+    return this.getListByStatus(status).filter(t => this.matchesFilter(t)).length;
+  }
+
+  isColumnCustom(col: { id: string }): boolean {
+    return col.id.startsWith('custom-');
+  }
+
+  openAddColumnModal(): void {
+    this.newColumnTitle = '';
+    this.isAddColumnModalOpen = true;
+  }
+
+  closeAddColumnModal(): void {
+    this.isAddColumnModalOpen = false;
+    this.newColumnTitle = '';
+  }
+
+  saveNewColumn(): void {
+    const title = this.newColumnTitle.trim();
+    if (!title) return;
+    const id = 'custom-' + Date.now();
+    this.columns.push({ id, title });
+    this.listByStatus[id] = [];
+    this.saveToStorage();
+    this.closeAddColumnModal();
+    this.cdr.markForCheck();
+  }
+
+  startEditColumn(col: { id: string; title: string }): void {
+    this.editingColumnId = col.id;
+    this.editingColumnTitle = col.title;
+  }
+
+  saveEditColumn(): void {
+    if (this.editingColumnId == null) return;
+    const title = this.editingColumnTitle.trim();
+    if (title) {
+      const col = this.columns.find(c => c.id === this.editingColumnId);
+      if (col) col.title = title;
+      this.saveToStorage();
     }
-
-    this.saveToStorage();
-    this.cdr.detectChanges();
-
-    setTimeout(() => {
-      this.showUndo = false;
-      this.cdr.detectChanges();
-    }, 5000);
+    this.editingColumnId = null;
+    this.editingColumnTitle = '';
+    this.cdr.markForCheck();
   }
 
-  undoDelete() {
-    if (!this.lastDeletedTask || !this.lastDeletedStatus) return;
-
-    const list = this.getListByStatus(this.lastDeletedStatus);
-    list.push(this.lastDeletedTask);
-
-    this.lastDeletedTask = null;
-    this.lastDeletedStatus = null;
-    this.showUndo = false;
-    this.saveToStorage();
-    this.cdr.detectChanges();
+  cancelEditColumn(): void {
+    this.editingColumnId = null;
+    this.editingColumnTitle = '';
+    this.cdr.markForCheck();
   }
 
-  /* ---------- FIXED DRAG & DROP ---------- */
-  drop(event: CdkDragDrop<Task[]>, newStatus: Task['status']): void {
-  if (event.previousContainer === event.container) {
-    moveItemInArray(event.container.data!, event.previousIndex, event.currentIndex);
-  } else {
-    transferArrayItem(
-      event.previousContainer.data!,
-      event.container.data!,
-      event.previousIndex,
-      event.currentIndex
-    );
-    
-    // Update task status and timestamps
-    const task = event.container.data![event.currentIndex];
+  deleteColumn(col: { id: string; title: string }): void {
+    if (!this.isColumnCustom(col)) return;
+    const count = this.getListByStatus(col.id).length;
+    const message = count > 0
+      ? `Delete column "${col.title}" and its ${count} task(s)?`
+      : `Delete column "${col.title}"?`;
+    if (!confirm(message)) return;
+    this.columns = this.columns.filter(c => c.id !== col.id);
+    delete this.listByStatus[col.id];
+    this.saveToStorage();
+    this.cdr.markForCheck();
+  }
+
+  onSearchChange(): void {
+    this.cdr.markForCheck();
+  }
+
+  onFilterChange(): void {
+    this.cdr.markForCheck();
+  }
+
+  onAssigneeFilterChange(): void {
+    this.cdr.markForCheck();
+  }
+
+  /* --- MODAL LOGIC --- */
+  openTaskModal(task?: Task) {
     if (task) {
-      task.status = newStatus;
-      if (newStatus === 'done') {
-        task.completedDate = new Date().toISOString().split('T')[0];
-      } else if (newStatus === 'delivered') {
-        task.deliveredDate = new Date().toISOString().split('T')[0];
-      }
-    }
-  }
-  this.saveToStorage();
-}
-
-
-  /* ---------- HELPER METHODS ---------- */
-  private getListByStatus(status: Task['status']): Task[] {
-    switch (status) {
-      case 'todo':
-        return this.todo;
-      case 'inprogress':
-        return this.inprogress;
-      case 'done':
-        return this.done;
-      case 'delivered':
-        return this.delivered;
-      default:
-        return this.todo;
-    }
-  }
-
-  /* ---------- LOCAL STORAGE (SSR SAFE) ---------- */
-  private saveToStorage(): void {
-    if (!isPlatformBrowser(this.platformId)) return;
-
-    try {
-      const data = {
-        todo: this.todo,
-        inprogress: this.inprogress,
-        done: this.done,
-        delivered: this.delivered
+      this.editingTask = task;
+      this.tempTask = { ...task };
+    } else {
+      this.editingTask = null;
+      this.tempTask = {
+        title: '',
+        description: '',
+        priority: 'Medium',
+        assignee: '',
+        dueDate: new Date().toISOString().split('T')[0]
       };
-      localStorage.setItem('kanban_tasks', JSON.stringify(data));
-    } catch (error) {
-      console.warn('Failed to save to localStorage:', error);
+    }
+    this.isModalOpen = true;
+  }
+
+  closeModal() {
+    this.isModalOpen = false;
+    this.tempTask = {};
+  }
+
+  saveTask() {
+    if (!this.tempTask.title?.trim()) return;
+
+    if (this.editingTask) {
+      Object.assign(this.editingTask, this.tempTask);
+      if (this.tempTask.description === undefined) this.editingTask.description = '';
+    } else {
+      const newTask: Task = {
+        ...(this.tempTask as Task),
+        id: `TSK-${Math.floor(Math.random() * 9000) + 1000}`,
+        status: 'todo',
+        description: this.tempTask.description ?? ''
+      };
+      const list = this.getListByStatus('todo');
+      list.unshift(newTask);
+    }
+    this.saveToStorage();
+    this.closeModal();
+  }
+
+  /* --- DRAG & DROP --- */
+  drop(event: CdkDragDrop<Task[]>, newStatus: string) {
+    if (event.previousContainer === event.container) {
+      moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
+    } else {
+      transferArrayItem(
+        event.previousContainer.data,
+        event.container.data,
+        event.previousIndex,
+        event.currentIndex
+      );
+
+      const task = event.container.data[event.currentIndex];
+      task.status = newStatus;
+      
+      // Auto-set dates
+      if (task.status === 'done') task.completedDate = new Date().toISOString();
+      if (task.status === 'delivered') task.deliveredDate = new Date().toISOString();
+    }
+    this.saveToStorage();
+  }
+
+  /* --- HELPERS --- */
+  getListByStatus(status: string): Task[] {
+    return this.listByStatus[status] ?? [];
+  }
+
+  confirmRemoveTask(task: Task, status: string) {
+    if (confirm(`Delete ${task.id}?`)) {
+      const list = this.getListByStatus(status);
+      const idx = list.findIndex(t => t.id === task.id);
+      if (idx > -1) list.splice(idx, 1);
+      this.saveToStorage();
     }
   }
 
-  private loadFromStorage(): void {
-    if (!isPlatformBrowser(this.platformId)) return;
+  trackByFn(index: number, item: Task) { return item.id; }
 
-    try {
-      const data = localStorage.getItem('kanban_tasks');
-      if (data) {
-        const parsed = JSON.parse(data);
-        this.todo = parsed.todo || [];
-        this.inprogress = parsed.inprogress || [];
-        this.done = parsed.done || [];
-        this.delivered = parsed.delivered || [];
+  private saveToStorage() {
+    if (isPlatformBrowser(this.platformId)) {
+      const data = { columns: this.columns, listByStatus: this.listByStatus };
+      localStorage.setItem('kanban_pro_v2', JSON.stringify(data));
+    }
+  }
+
+  private loadFromStorage() {
+    const v2 = localStorage.getItem('kanban_pro_v2');
+    if (v2) {
+      const p = JSON.parse(v2);
+      if (Array.isArray(p.columns) && p.columns.length > 0) {
+        this.columns = p.columns;
       }
-    } catch (error) {
-      console.warn('Failed to load from localStorage:', error);
-      // Reset to empty arrays on error
-      this.todo = [];
-      this.inprogress = [];
-      this.done = [];
-      this.delivered = [];
+      if (p.listByStatus && typeof p.listByStatus === 'object') {
+        this.listByStatus = { ...p.listByStatus };
+      }
+      this.columns.forEach(c => {
+        if (!(c.id in this.listByStatus)) this.listByStatus[c.id] = [];
+      });
+      return;
+    }
+    // Migrate from v1
+    const v1 = localStorage.getItem('kanban_pro_v1');
+    if (v1) {
+      const p = JSON.parse(v1);
+      this.listByStatus = {
+        todo: p.todo || [],
+        inprogress: p.inprogress || [],
+        done: p.done || [],
+        delivered: p.delivered || []
+      };
+      this.saveToStorage();
     }
   }
 }
