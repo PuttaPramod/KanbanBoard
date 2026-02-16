@@ -36,10 +36,9 @@
 }
 
 .dashboard-shell {
-  min-height: 100vh;
+  margin-top: 10px;
   background: var(--tp-bg-app);
   color: var(--tp-text);
-  padding: 24px;
 }
 
 /* ----- Header ----- */
@@ -47,7 +46,6 @@
   background: var(--tp-bg-elevated);
   border: 1px solid var(--tp-border);
   border-radius: var(--tp-radius-lg);
-  padding: 20px 24px;
   margin-bottom: 24px;
   display: flex;
   justify-content: space-between;
@@ -98,7 +96,6 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 18px;
   border-radius: var(--tp-radius-md);
   font-weight: 600;
   font-size: 0.875rem;
@@ -120,7 +117,7 @@
 }
 
 /* Compact model - denser layout */
-.dashboard-shell.compact {
+/* .dashboard-shell.compact {
   padding: 12px;
 }
 .dashboard-shell.compact .dash-header {
@@ -128,16 +125,16 @@
 }
 .dashboard-shell.compact .dash-card {
   padding: 10px;
-}
+} */
 .dashboard-shell.compact .card-value { font-size: 1.25rem; }
 .dashboard-shell.compact .card-label { font-size: 0.7rem; }
 .dashboard-shell.compact .recent-list li { padding: 8px 10px; }
 
 /* Spotlight model - emphasize completion card */
-.dashboard-shell.spotlight {
+/* .dashboard-shell.spotlight {
   background: linear-gradient(180deg, #f7fbff 0%, #eef6ff 55%);
   color: #0f172a;
-}
+} */
 
 /* Header: subtle, clean */
 .dashboard-shell.spotlight .dash-header {
@@ -330,6 +327,7 @@
 .card-inprogress { border-left: 4px solid var(--col-inprogress); }
 .card-done { border-left: 4px solid var(--col-done); }
 .card-delivered { border-left: 4px solid var(--col-delivered); }
+.card-members { border-left: 4px solid #7c3aed; }
 
 .card-label {
   font-size: 0.75rem;
@@ -360,6 +358,7 @@
 .accent-danger { color: #b91c1c; font-weight: 800; }
 .accent-today { color: var(--tp-primary); font-weight: 700; }
 .accent-week { color: var(--col-delivered); font-weight: 700; }
+.accent-members { color: #7c3aed; font-weight: 700; }
 
 /* ----- Bottom section ----- */
 .dash-bottom {

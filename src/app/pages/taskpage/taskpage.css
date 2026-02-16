@@ -37,6 +37,7 @@
 
 /* ----- Layout shell ----- */
 .kanban-shell {
+  margin-top: 20px;
   display: flex;
   flex-direction: column;
   overflow: hidden;

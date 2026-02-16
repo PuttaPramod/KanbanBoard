@@ -6,7 +6,7 @@ import { TaskPage } from './pages/taskpage/taskpage';
 import { NavbarComponent } from './pages/navbar/navbar';
 
 export const routes: Routes = [
-  { path: '', redirectTo: 'login', pathMatch: 'full' },
+  { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
   { path: 'login', component: Login },
   { path: 'register', component: Register },
   { path: 'dashboard', component: Dashboard },

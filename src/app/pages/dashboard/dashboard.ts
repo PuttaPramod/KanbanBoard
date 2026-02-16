@@ -22,6 +22,7 @@ export class Dashboard implements OnInit {
   todayCount = 0;
   thisWeekCount = 0;
   completionRate = 0;
+  teamMembersCount = 0;
   recentTasks: Task[] = [];
 
   constructor(@Inject(PLATFORM_ID) private platformId: Object) {}
@@ -105,6 +106,15 @@ export class Dashboard implements OnInit {
 
     const completedTotal = this.doneCount + this.deliveredCount;
     this.completionRate = this.totalTasks > 0 ? Math.round((completedTotal / this.totalTasks) * 100) : 0;
+
+    // Count unique assignees
+    const uniqueAssignees = new Set<string>();
+    all.forEach(task => {
+      if (task.assignee && task.assignee.trim()) {
+        uniqueAssignees.add(task.assignee);
+      }
+    });
+    this.teamMembersCount = uniqueAssignees.size;
 
     this.recentTasks = all
       .slice()

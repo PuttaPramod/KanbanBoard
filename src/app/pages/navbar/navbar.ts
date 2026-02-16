@@ -1,7 +1,9 @@
-import { Component, ViewChild, ElementRef, HostListener, OnInit, OnDestroy, Inject, PLATFORM_ID } from '@angular/core';
+import { Component, ViewChild, ElementRef, HostListener, OnInit, OnDestroy, Inject, PLATFORM_ID, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { AuthService } from '../../services/auth.service';
 
 interface NavItem {
   label: string;
@@ -12,15 +14,20 @@ interface NavItem {
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive],
+  imports: [CommonModule, RouterLink, RouterLinkActive, FormsModule],
   templateUrl: './navbar.html',
   styleUrls: ['./navbar.css']
 })
 export class NavbarComponent implements OnInit, OnDestroy {
   menuOpen = false;
+  isLoggedIn: any;
+  showMobileMenu = signal(false);
+  searchActive = signal(false); // Signal for search state
+  searchQuery = signal(''); // Signal for search query
   
   @ViewChild('navMenu') navMenu!: ElementRef<HTMLDivElement>;
   @ViewChild('hamburgerBtn') hamburgerBtn!: ElementRef<HTMLButtonElement>;
+  @ViewChild('searchInput') searchInput!: ElementRef<HTMLInputElement>;
 
   private menuItems: NavItem[] = [
     { label: 'Dashboard', route: '/dashboard', icon: '📊' },
@@ -33,10 +40,14 @@ export class NavbarComponent implements OnInit, OnDestroy {
   constructor(
     private router: Router, 
     private elementRef: ElementRef,
+    private authService: AuthService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {}
 
   ngOnInit(): void {
+    // Initialize isLoggedIn after authService is available
+    this.isLoggedIn = this.authService.isLoggedIn;
+    
     // Close menu on route changes
     this.router.events.subscribe(() => {
       this.closeMenu();
@@ -83,11 +94,42 @@ export class NavbarComponent implements OnInit, OnDestroy {
   }
 
   logout(): void {
+    this.authService.logout();
     this.closeMenu();
-    // Optional: Add confirmation or logout animation here
-    this.router.navigate(['/login']).catch(err => {
-      console.error('Navigation error:', err);
-    });
+    // Add a small delay for smooth animation
+    setTimeout(() => {
+      this.router.navigate(['/login']).catch(err => {
+        console.error('Navigation error:', err);
+      });
+    }, 300);
+  }
+
+  toggleSearch(): void {
+    this.searchActive.update(state => !state);
+    
+    // Focus search input when opened
+    if (this.searchActive()) {
+      setTimeout(() => {
+        if (isPlatformBrowser(this.platformId)) {
+          this.searchInput?.nativeElement?.focus();
+        }
+      }, 50);
+    }
+  }
+
+  handleSearch(): void {
+    const query = this.searchQuery();
+    if (query.trim()) {
+      console.log('Searching for:', query);
+      // TODO: Implement actual search functionality
+    }
+  }
+
+  clearSearch(): void {
+    this.searchQuery.set('');
+    if (isPlatformBrowser(this.platformId)) {
+      this.searchInput?.nativeElement?.focus();
+    }
   }
 
   // Keyboard navigation (Escape to close, Tab trapping)

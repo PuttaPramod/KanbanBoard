@@ -1,100 +1,79 @@
-/* Navbar base */
-.navbar {
-  height: 64px;
-  background: linear-gradient(135deg, #2563eb, #4f46e5);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  position: sticky;
-  top: 0;
-  z-index: 1000;
+/* ============================================
+   APP — Global Styles
+   ============================================ */
+
+:root {
+  --tp-primary: #0b74de;
+  --tp-primary-hover: #075fa8;
+  --tp-primary-light: rgba(11, 116, 222, 0.1);
+  --tp-secondary: #06b6d4;
+  --tp-bg-app: #f1f5f9;
+  --tp-bg-elevated: #ffffff;
+  --tp-border: #e2e8f0;
+  --tp-text: #0f172a;
+  --tp-text-secondary: #475569;
+  --tp-text-muted: #64748b;
+  --tp-radius-md: 10px;
+  --tp-radius-lg: 14px;
+  --tp-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
+  --tp-shadow-md: 0 4px 12px rgba(15, 23, 42, 0.1);
+  --tp-transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --navbar-height: 75px;
 }
 
-/* Center content */
-.nav-container {
-  max-width: 1200px;
-  margin: auto;
-  height: 100%;
-  padding: 0 24px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-/* Logo */
-.logo {
-  font-size: 22px;
-  font-weight: 700;
-  color: #ffffff;
-  text-decoration: none;
-  letter-spacing: 0.5px;
-}
-
-.logo:hover {
-  opacity: 0.9;
-}
-
-/* Right side links */
-.links {
-  display: flex;
-  align-items: center;
-  gap: 24px;
-}
-
-/* Nav links */
-.links a {
-  color: rgba(255, 255, 255, 0.9);
-  text-decoration: none;
-  font-weight: 500;
-  font-size: 15px;
-  position: relative;
-  padding-bottom: 4px;
-  transition: color 0.2s ease;
-}
-
-/* Hover */
-.links a:hover {
-  color: #ffffff;
-}
-
-/* Active route underline */
-.links a.active::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  bottom: 0;
+/* ===== GLOBAL LAYOUT ===== */
+:host {
+  display: block;
   width: 100%;
-  height: 2px;
-  background: #ffffff;
-  border-radius: 2px;
+  height: 100%;
+  margin: 0;
+  padding: 0;
 }
 
-/* Logout button */
-.links button {
-  background: rgba(255, 255, 255, 0.15);
-  border: none;
-  padding: 6px 14px;
-  border-radius: 8px;
-  color: #ffffff;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.2s ease;
+body {
+  margin: 0;
+  padding: 0;
 }
 
-.links button:hover {
-  background: rgba(255, 255, 255, 0.3);
+/* ===== PAGE STRUCTURE ===== */
+app-navbar {
+  display: block;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  z-index: 100;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .nav-container {
-    padding: 0 16px;
+router-outlet {
+  display: block;
+  width: 100%;
+  margin-top: 75px;
+  padding: 20px 0;
+  background: var(--tp-bg-app);
+  min-height: calc(100vh - 75px);
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 1023px) {
+  router-outlet {
+    margin-top: 70px;
   }
-
-  .links {
-    gap: 16px;
-  }
-
-  .logo {
-    font-size: 18px;
+  
+  app-navbar {
+    height: 70px;
   }
 }
+
+@media (max-width: 640px) {
+  router-outlet {
+    margin-top: 65px;
+    padding: 16px 0;
+  }
+  
+  app-navbar {
+    height: 65px;
+  }
+}
+
