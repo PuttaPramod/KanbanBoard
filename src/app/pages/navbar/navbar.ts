@@ -1,5 +1,6 @@
 import { Component, ViewChild, ElementRef, HostListener, OnInit, OnDestroy, Inject, PLATFORM_ID, signal } from '@angular/core';
 import { Router } from '@angular/router';
+import { Location } from '@angular/common';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -39,6 +40,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
   constructor(
     private router: Router, 
+    private location: Location,
     private elementRef: ElementRef,
     private authService: AuthService,
     @Inject(PLATFORM_ID) private platformId: Object
@@ -54,12 +56,20 @@ export class NavbarComponent implements OnInit, OnDestroy {
     });
   }
 
+  isAuthPage(): boolean {
+    const currentPath = this.location.path();
+    return currentPath === '/login' || currentPath === '/register';
+  }
+
   ngOnDestroy(): void {
     // Cleanup on component destroy
     this.restoreScroll();
   }
 
   toggleMenu(): void {
+    // Debug log to verify click handling
+    // eslint-disable-next-line no-console
+    console.debug('toggleMenu called - current menuOpen:', this.menuOpen);
     if (this.menuOpen) {
       this.closeMenu();
     } else {
@@ -68,6 +78,8 @@ export class NavbarComponent implements OnInit, OnDestroy {
   }
 
   openMenu(): void {
+    // eslint-disable-next-line no-console
+    console.debug('openMenu()');
     this.menuOpen = true;
     this.preventScroll();
     
@@ -82,6 +94,8 @@ export class NavbarComponent implements OnInit, OnDestroy {
   }
 
   closeMenu(): void {
+    // eslint-disable-next-line no-console
+    console.debug('closeMenu()');
     this.menuOpen = false;
     this.restoreScroll();
     

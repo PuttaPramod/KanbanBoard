@@ -1,117 +1,177 @@
-<div [ngClass]="['dashboard-shell', dashboardModel]">
-  <div class="page-title">
-    <div class="page-title-inner">
-      <div class="page-title-text">
-        <h1>Interactive Kanban Task and Workflow Management</h1>
-        <p class="page-sub">Sprint overview &amp; actionable metrics</p>
-      </div>
-      <div class="title-actions">
-        <a class="dash-btn primary" routerLink="/tasks">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-          Go to Board
-        </a>
+<div class="dashboard-shell py-4">
+  <!-- Page Title -->
+  <div class="container-fluid">
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <h1 class="display-6 fw-bold mb-2">Interactive Kanban Task and Workflow Management</h1>
+            <p class="text-muted">Sprint overview &amp; actionable metrics</p>
+          </div>
+          <div class="title-actions">
+            <a class="btn btn-primary" routerLink="/tasks">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+              Go to Board
+            </a>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Header removed; title bar now contains actions -->
-
-  <main class="dash-main">
-    <div class="dash-layout-split">
-      <aside class="dash-left-col">
-        <div class="metrics-grid">
-          <article class="dash-card card-total">
-            <div class="card-label">Total Tasks</div>
-            <div class="card-value">{{ totalTasks }}</div>
-            <div class="card-meta">Across all columns</div>
-          </article>
-          <article class="dash-card card-todo">
-            <div class="card-label">To Do</div>
-            <div class="card-value accent-todo">{{ todoCount }}</div>
-            <div class="card-meta">Not started</div>
-          </article>
-          <article class="dash-card card-inprogress">
-            <div class="card-label">In Progress</div>
-            <div class="card-value accent-inprogress">{{ inprogressCount }}</div>
-            <div class="card-meta">Currently active</div>
-          </article>
-          <article class="dash-card card-done">
-            <div class="card-label">Completed</div>
-            <div class="card-value accent-done">{{ doneCount }}</div>
-            <div class="card-meta">Done</div>
-          </article>
-          <article class="dash-card card-delivered">
-            <div class="card-label">Delivered</div>
-            <div class="card-value accent-delivered">{{ deliveredCount }}</div>
-            <div class="card-meta">Shipped</div>
-          </article>
-          <article class="dash-card card-members">
-            <div class="card-label">Team Members</div>
-            <div class="card-value accent-members">{{ teamMembersCount }}</div>
-            <div class="card-meta">Active assignees</div>
-          </article>
+  <!-- Main Content -->
+  <main class="container-fluid">
+    <div class="row g-4">
+      <!-- Left Column: Metrics Cards -->
+      <aside class="col-lg-8 col-xxl-9">
+        <!-- Main Metrics Grid -->
+        <div class="row g-3 mb-4">
+          <div class="col-6 col-md-4 col-lg-3">
+            <article class="card dash-card card-total h-100 shadow-sm">
+              <div class="card-body">
+                <div class="card-label text-muted">Total Tasks</div>
+                <div class="card-value display-6">{{ totalTasks }}</div>
+                <div class="card-meta text-muted">Across all columns</div>
+              </div>
+            </article>
+          </div>
+          <div class="col-6 col-md-4 col-lg-3">
+            <article class="card dash-card card-todo h-100 shadow-sm">
+              <div class="card-body">
+                <div class="card-label text-muted">To Do</div>
+                <div class="card-value display-6 accent-todo">{{ todoCount }}</div>
+                <div class="card-meta text-muted">Not started</div>
+              </div>
+            </article>
+          </div>
+          <div class="col-6 col-md-4 col-lg-3">
+            <article class="card dash-card card-inprogress h-100 shadow-sm">
+              <div class="card-body">
+                <div class="card-label text-muted">In Progress</div>
+                <div class="card-value display-6 accent-inprogress">{{ inprogressCount }}</div>
+                <div class="card-meta text-muted">Currently active</div>
+              </div>
+            </article>
+          </div>
+          <div class="col-6 col-md-4 col-lg-3">
+            <article class="card dash-card card-done h-100 shadow-sm">
+              <div class="card-body">
+                <div class="card-label text-muted">Completed</div>
+                <div class="card-value display-6 accent-done">{{ doneCount }}</div>
+                <div class="card-meta text-muted">Done</div>
+              </div>
+            </article>
+          </div>
+          <div class="col-6 col-md-4 col-lg-3">
+            <article class="card dash-card card-delivered h-100 shadow-sm">
+              <div class="card-body">
+                <div class="card-label text-muted">Delivered</div>
+                <div class="card-value display-6 accent-delivered">{{ deliveredCount }}</div>
+                <div class="card-meta text-muted">Shipped</div>
+              </div>
+            </article>
+          </div>
+          <div class="col-6 col-md-4 col-lg-3">
+            <article class="card dash-card card-members h-100 shadow-sm">
+              <div class="card-body">
+                <div class="card-label text-muted">Team Members</div>
+                <div class="card-value display-6 accent-members">{{ teamMembersCount }}</div>
+                <div class="card-meta text-muted">Active assignees</div>
+              </div>
+            </article>
+          </div>
         </div>
 
-        <div class="small-grid">
-          <article class="dash-card">
-            <div class="card-label">Overdue</div>
-            <div class="card-value accent-danger">{{ overdueCount }}</div>
-            <div class="card-meta">Past due date</div>
-          </article>
-          <article class="dash-card">
-            <div class="card-label">Due Today</div>
-            <div class="card-value accent-today">{{ todayCount }}</div>
-            <div class="card-meta">Scheduled today</div>
-          </article>
-          <article class="dash-card">
-            <div class="card-label">Due This Week</div>
-            <div class="card-value accent-week">{{ thisWeekCount }}</div>
-            <div class="card-meta">This week</div>
-          </article>
+        <!-- Secondary Metrics -->
+        <div class="row g-3">
+          <div class="col-6 col-md-4">
+            <article class="card dash-card card-overdue h-100 shadow-sm">
+              <div class="card-body">
+                <div class="card-label text-muted">Overdue</div>
+                <div class="card-value display-6 accent-danger">{{ overdueCount }}</div>
+                <div class="card-meta text-muted">Past due date</div>
+              </div>
+            </article>
+          </div>
+          <div class="col-6 col-md-4">
+            <article class="card dash-card card-today h-100 shadow-sm">
+              <div class="card-body">
+                <div class="card-label text-muted">Due Today</div>
+                <div class="card-value display-6 accent-today">{{ todayCount }}</div>
+                <div class="card-meta text-muted">Scheduled today</div>
+              </div>
+            </article>
+          </div>
+          <div class="col-6 col-md-4">
+            <article class="card dash-card card-week h-100 shadow-sm">
+              <div class="card-body">
+                <div class="card-label text-muted">Due This Week</div>
+                <div class="card-value display-6 accent-week">{{ thisWeekCount }}</div>
+                <div class="card-meta text-muted">This week</div>
+              </div>
+            </article>
+          </div>
         </div>
       </aside>
 
-      <section class="dash-right-col">
-        <article class="dash-card completion-card">
-          <div class="completion-header">
-            <div>
-              <span class="card-label">Completion Rate</span>
-              <p class="card-meta">Completed + delivered vs total</p>
-            </div>
-            <div class="completion-value">{{ completionRate }}%</div>
+      <!-- Right Column: Completion & Recent Tasks -->
+      <section class="col-lg-4 col-xxl-3">
+        <div class="row g-3 h-100">
+          <!-- Completion Rate Card -->
+          <div class="col-12">
+            <article class="card dash-card completion-card card-completion h-100 shadow-sm">
+              <div class="card-body">
+                <div class="mb-3">
+                  <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                      <span class="card-label text-muted">Completion Rate</span>
+                      <p class="card-meta text-muted mb-0">Completed + delivered vs total</p>
+                    </div>
+                    <div class="completion-value display-5">{{ completionRate }}%</div>
+                  </div>
+                </div>
+                <div class="progress" style="height: 8px;">
+                  <div class="progress-bar bg-success" [style.width.%]="completionRate"></div>
+                </div>
+              </div>
+            </article>
           </div>
-          <div class="completion-bar">
-            <div class="completion-fill" [style.width.%]="completionRate"></div>
-          </div>
-        </article>
 
-        <article class="dash-card recent-card">
-          <div class="recent-header">
-            <span class="card-label">Recent Tasks</span>
-            <span class="recent-count">{{ recentTasks.length }} tasks</span>
+          <!-- Recent Tasks Card -->
+          <div class="col-12">
+            <article class="card dash-card recent-card card-recent h-100 shadow-sm">
+              <div class="card-body d-flex flex-column">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <span class="card-label text-muted">Recent Tasks</span>
+                  <span class="badge bg-light text-dark">{{ recentTasks.length }} tasks</span>
+                </div>
+                @if (recentTasks.length) {
+                  <div class="overflow-auto flex-grow-1">
+                    <ul class="recent-list list-unstyled mb-0">
+                      @for (task of recentTasks; track task.id) {
+                        <li class="mb-3">
+                          <div class="d-flex justify-content-between align-items-start mb-1">
+                            <span class="recent-title fw-500 text-truncate">{{ task.title }}</span>
+                            <span class="recent-status badge" [ngClass]="getStatusClass(task)">{{ getStatusLabel(task) }}</span>
+                          </div>
+                          <div class="recent-meta text-muted small">
+                            @if (task.dueDate) {
+                              <span>Due {{ task.dueDate | date: 'dd MMM' }}</span>
+                            } @else {
+                              <span>No due date</span>
+                            }
+                          </div>
+                        </li>
+                      }
+                    </ul>
+                  </div>
+                } @else {
+                  <p class="card-meta text-muted empty-msg">No tasks yet. Create some on the board.</p>
+                }
+              </div>
+            </article>
           </div>
-          @if (recentTasks.length) {
-            <ul class="recent-list">
-              @for (task of recentTasks; track task.id) {
-                <li>
-                  <div class="recent-main">
-                    <span class="recent-title">{{ task.title }}</span>
-                    <span class="recent-status" [ngClass]="getStatusClass(task)">{{ getStatusLabel(task) }}</span>
-                  </div>
-                  <div class="recent-meta">
-                    @if (task.dueDate) {
-                      <span>Due {{ task.dueDate | date: 'dd MMM' }}</span>
-                    } @else {
-                      <span>No due date</span>
-                    }
-                  </div>
-                </li>
-              }
-            </ul>
-          } @else {
-            <p class="card-meta empty-msg">No tasks yet. Create some on the board.</p>
-          }
-        </article>
+        </div>
       </section>
     </div>
   </main>
