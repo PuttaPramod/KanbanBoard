@@ -3,11 +3,13 @@ import { CommonModule } from '@angular/common';
 import { PLATFORM_ID } from '@angular/core';
 import { Task } from '../../models/task';
 import { RouterModule } from '@angular/router';
+import { BaseChartDirective } from 'ng2-charts';
+import { ChartConfiguration } from 'chart.js';
 
 @Component({
   selector: 'app-dashboard-page',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, BaseChartDirective],
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.css']
 })
@@ -25,14 +27,67 @@ export class Dashboard implements OnInit {
   teamMembersCount = 0;
   recentTasks: Task[] = [];
 
+  // Pie chart data
+  pieChartData: Array<{ label: string; value: number; color: string }> = [];
+  pieChartOptions: ChartConfiguration<'doughnut'>['options'];
+  pieChartLabels: string[] = [];
+  pieChartDatasets: ChartConfiguration<'doughnut'>['data']['datasets'] = [];
+
   constructor(@Inject(PLATFORM_ID) private platformId: Object) {}
 
   ngOnInit(): void {
     if (typeof window !== 'undefined') {
+      this.initializePieChartOptions();
       this.loadFromStorage();
       this.loadModelFromStorage();
       this.computeMetrics();
     }
+  }
+
+  private initializePieChartOptions(): void {
+    this.pieChartOptions = {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: 'nearest',
+        intersect: false
+      },
+      plugins: {
+        legend: {
+          display: false
+        },
+        tooltip: {
+          enabled: true,
+          backgroundColor: 'rgba(0, 0, 0, 0.9)',
+          padding: 12,
+          titleFont: { size: 14, weight: 700 },
+          bodyFont: { size: 13 },
+          cornerRadius: 8,
+          displayColors: true,
+          borderColor: 'rgba(255, 255, 255, 0.2)',
+          borderWidth: 1,
+          yAlign: 'bottom',
+          xAlign: 'center',
+          callbacks: {
+            title: (context: any) => {
+              return context[0]?.label || '';
+            },
+            label: (context: any) => {
+              const value = context.raw || 0;
+              const total = (context.dataset.data as number[]).reduce((a, b) => a + b, 0);
+              const percentage = ((value / total) * 100).toFixed(1);
+              return `Tasks: ${value} (${percentage}%)`;
+            }
+          }
+        }
+      },
+      animation: {
+        animateRotate: true,
+        animateScale: false,
+        duration: 800,
+        easing: 'easeInOutQuart'
+      }
+    } as any;
   }
 
   setModel(model: string) {
@@ -120,6 +175,37 @@ export class Dashboard implements OnInit {
       .slice()
       .sort((a, b) => (b.id || '').localeCompare(a.id || ''))
       .slice(0, 8);
+
+    // Build pie chart data
+    this.pieChartData = [
+      { label: 'To Do', value: this.todoCount, color: '#3b82f6' },
+      { label: 'In Progress', value: this.inprogressCount, color: '#f59e0b' },
+      { label: 'Completed', value: this.doneCount, color: '#10b981' },
+      { label: 'Delivered', value: this.deliveredCount, color: '#8b5cf6' }
+    ].filter(item => item.value > 0);
+
+    // Update Chart.js pie chart
+    this.updatePieChart();
+  }
+
+  private updatePieChart(): void {
+    this.pieChartLabels = this.pieChartData.map(item => item.label);
+    const values = this.pieChartData.map(item => item.value);
+    const colors = this.pieChartData.map(item => item.color);
+    const borderColors = colors.map(color => color);
+
+    this.pieChartDatasets = [
+      {
+        data: values,
+        backgroundColor: colors,
+        borderColor: borderColors,
+        borderWidth: 3,
+        borderRadius: 6,
+        hoverOffset: 10,
+        hoverBorderWidth: 2,
+        spacing: 2
+      }
+    ];
   }
 
   getStatusLabel(task: Task): string {
@@ -140,5 +226,45 @@ export class Dashboard implements OnInit {
       case 'delivered': return 'delivered';
       default: return 'custom';
     }
+  }
+
+  getPieChartPercentage(value: number): number {
+    const total = this.pieChartData.reduce((sum, item) => sum + item.value, 0);
+    return total > 0 ? Math.round((value / total) * 100) : 0;
+  }
+
+  getPieSlices() {
+    const total = this.pieChartData.reduce((sum, item) => sum + item.value, 0);
+    if (total === 0) return [];
+
+    let cumulativeAngle = 0;
+    return this.pieChartData.map(item => {
+      const sliceAngle = (item.value / total) * 360;
+      const startAngle = cumulativeAngle;
+      const endAngle = cumulativeAngle + sliceAngle;
+      cumulativeAngle = endAngle;
+
+      const startRad = (startAngle * Math.PI) / 180;
+      const endRad = (endAngle * Math.PI) / 180;
+      const radius = 80;
+      const x1 = 100 + radius * Math.cos(startRad);
+      const y1 = 100 + radius * Math.sin(startRad);
+      const x2 = 100 + radius * Math.cos(endRad);
+      const y2 = 100 + radius * Math.sin(endRad);
+
+      const largeArc = sliceAngle > 180 ? 1 : 0;
+      const pathData = [
+        `M 100 100`,
+        `L ${x1} ${y1}`,
+        `A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2}`,
+        'Z'
+      ].join(' ');
+
+      return {
+        ...item,
+        pathData,
+        percentage: Math.round((item.value / total) * 100)
+      };
+    });
   }
 }

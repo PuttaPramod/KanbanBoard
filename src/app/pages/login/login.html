@@ -50,6 +50,31 @@
         </div>
 
         <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+          <!-- Error message -->
+          @if (errorMessage()) {
+            <div class="alert alert-error">
+              <div class="alert-content">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="12" y1="8" x2="12" y2="12"/>
+                  <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                <span>{{ errorMessage() }}</span>
+              </div>
+              <button
+                type="button"
+                class="alert-close"
+                (click)="clearError()"
+                aria-label="Close alert"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            </div>
+          }
+
           <!-- Email field -->
           <div class="form-group">
             <label for="email" class="form-label">

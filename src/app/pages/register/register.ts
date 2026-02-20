@@ -15,6 +15,7 @@ export class Register {
   showPassword = signal(false);
   showConfirmPassword = signal(false);
   isSubmitting = signal(false);
+  errorMessage = signal<string | null>(null);
 
   constructor(private fb: FormBuilder, private router: Router, private authService: AuthService) {
     this.registerForm = this.fb.group(
@@ -88,7 +89,7 @@ export class Register {
     return texts[strength] || '';
   }
 
-  onSubmit(): void {
+  async onSubmit(): Promise<void> {
     if (this.registerForm.invalid) {
       // Mark all fields as touched to show errors
       Object.keys(this.registerForm.controls).forEach(key => {
@@ -98,20 +99,31 @@ export class Register {
     }
 
     this.isSubmitting.set(true);
+    this.errorMessage.set(null);
     const formData = this.registerForm.value;
 
-    // Simulate API call
-    setTimeout(() => {
-      console.log('Registration attempt:', {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-      });
-      // Call AuthService to set isLoggedIn to true after successful registration
-      this.authService.login(formData.email, formData.password);
-      this.isSubmitting.set(false);
+    try {
+      // Firebase authentication - create new user
+      await this.authService.register(
+        formData.email,
+        formData.password,
+        formData.firstName,
+        formData.lastName
+      );
+      
       // Navigate to dashboard on successful registration
-      this.router.navigate(['/login']);
-    }, 2000);
+      this.router.navigate(['/dashboard']);
+    } catch (error: any) {
+      // Error message is already set in AuthService, but we'll also capture it here
+      this.errorMessage.set(this.authService.getErrorMessage());
+      console.error('Registration error:', error);
+    } finally {
+      this.isSubmitting.set(false);
+    }
+  }
+
+  clearError(): void {
+    this.errorMessage.set(null);
+    this.authService.clearErrorMessage();
   }
 }
