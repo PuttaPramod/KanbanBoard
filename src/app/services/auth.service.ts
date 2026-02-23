@@ -34,8 +34,18 @@ export class AuthService {
       
       const userCredential = await createUserWithEmailAndPassword(this.auth, email, password);
       
-      // You can update user profile with additional data here if needed
-      // For now, just ensure the user is set
+      // Store user profile data in localStorage
+      if (firstName && lastName) {
+        const userData = {
+          uid: userCredential.user.uid,
+          email: userCredential.user.email,
+          firstName: firstName,
+          lastName: lastName,
+          displayName: `${firstName} ${lastName}`
+        };
+        localStorage.setItem(`user_profile_${userCredential.user.uid}`, JSON.stringify(userData));
+      }
+      
       this.currentUser.set(userCredential.user);
       this.isLoggedIn.set(true);
       
@@ -126,6 +136,50 @@ export class AuthService {
    */
   clearErrorMessage(): void {
     this.errorMessage.set(null);
+  }
+
+  /**
+   * Get user profile data (firstName, lastName)
+   */
+  getUserProfile(): { firstName: string; lastName: string } | null {
+    try {
+      const user = this.currentUser();
+      // Try lookup by uid first
+      if (user && user.uid) {
+        const stored = localStorage.getItem(`user_profile_${user.uid}`);
+        if (stored) {
+          const profile = JSON.parse(stored);
+          return {
+            firstName: profile.firstName || '',
+            lastName: profile.lastName || ''
+          };
+        }
+      }
+
+      // Fallback: try to find a profile stored by email (handles timing/race conditions)
+      const email = user?.email || null;
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (!key) continue;
+        if (!key.startsWith('user_profile_')) continue;
+        try {
+          const raw = localStorage.getItem(key);
+          if (!raw) continue;
+          const p = JSON.parse(raw);
+          if (email && p.email && p.email === email) {
+            return {
+              firstName: p.firstName || '',
+              lastName: p.lastName || ''
+            };
+          }
+        } catch (e) {
+          // ignore parse errors and continue
+        }
+      }
+    } catch (error) {
+      console.error('Error retrieving user profile:', error);
+    }
+    return null;
   }
 
   /**

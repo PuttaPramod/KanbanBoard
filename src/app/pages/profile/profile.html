@@ -1,1 +1,95 @@
-<p>profile works!</p>
+<div class="profile-container">
+  
+
+  <main class="profile-main">
+    <section class="profile-layout">
+      <div class="profile-left-column">
+        <!-- Profile Summary -->
+        <section class="profile-section">
+          <div class="section-container">
+            <div class="profile-card">
+              <div class="profile-avatar">
+                <div class="avatar-placeholder">{{ userInitials }}</div>
+              </div>
+              <div class="profile-info">
+                <h2 class="user-name">{{ firstName }} {{ lastName }}</h2>
+                <p class="user-status">Active Member</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Progress Summary -->
+        <section class="progress-section">
+          <div class="section-container">
+            <h2 class="section-title">Your Progress</h2>
+            <div class="progress-grid">
+              <div class="progress-card progress-card-primary">
+                <div class="progress-icon">📋</div>
+                <div class="progress-content">
+                  <div class="progress-label">Total Tasks</div>
+                  <div class="progress-value">{{ totalTasks }}</div>
+                  <div class="progress-description">All your tasks</div>
+                </div>
+              </div>
+
+              <div class="progress-card progress-card-todo">
+                <div class="progress-icon">📝</div>
+                <div class="progress-content">
+                  <div class="progress-label">To Do</div>
+                  <div class="progress-value">{{ todoCount }}</div>
+                  <div class="progress-description">Waiting to start</div>
+                </div>
+              </div>
+
+              <div class="progress-card progress-card-progress">
+                <div class="progress-icon">⚙️</div>
+                <div class="progress-content">
+                  <div class="progress-label">In Progress</div>
+                  <div class="progress-value">{{ inProgressCount }}</div>
+                  <div class="progress-description">Currently working</div>
+                </div>
+              </div>
+
+              <div class="progress-card progress-card-done">
+                <div class="progress-icon">✅</div>
+                <div class="progress-content">
+                  <div class="progress-label">Completed</div>
+                  <div class="progress-value">{{ completedCount }}</div>
+                  <div class="progress-description">Tasks finished</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- Recent Tasks at right -->
+      <div class="profile-right-column">
+        <section class="recent-tasks-section">
+          <div class="section-container">
+            <h2 class="section-title">Recent Tasks</h2>
+            <div class="tasks-list">
+              <div
+                *ngFor="let task of recentTasks"
+                [ngClass]="getTaskStatusClass(task.status)"
+                class="task-item">
+                <div class="task-status-dot"></div>
+                <div class="task-details">
+                  <div class="task-title">{{ task.title }}</div>
+                  <div class="task-meta">{{ getTaskStatusLabel(task.status) }} • {{ task.description || 'No description' }}</div>
+                </div>
+                <div [ngClass]="'priority-' + task.priority.toLowerCase()" class="task-priority">{{ task.priority }}</div>
+              </div>
+
+              <!-- Empty state if no tasks -->
+              <div *ngIf="recentTasks.length === 0" style="text-align: center; padding: 40px 20px; color: #9ca3af;">
+                <p style="font-size: 1rem;">No tasks yet. Create your first task to get started!</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </section>
+  </main>
+</div>

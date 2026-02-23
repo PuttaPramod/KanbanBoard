@@ -7,6 +7,7 @@ import { Navbar } from './pages/navbar/navbar';
 import { Contact } from './pages/contact/contact';
 import { Profile } from './pages/profile/profile';
 import { AuthGuard } from './guards/auth.guard';
+import { Home } from './pages/home/home';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -17,5 +18,6 @@ export const routes: Routes = [
   { path: 'contact', component: Contact, canActivate: [AuthGuard] },
   { path: 'profile', component: Profile, canActivate: [AuthGuard] },
   { path: 'navbar', component: Navbar },
+  { path: 'home', component: Home },
   { path: '**', redirectTo: 'login' }
 ];
