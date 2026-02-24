@@ -1,7 +1,8 @@
 import { Component } from '@angular/core';
-import { Router, RouterOutlet } from '@angular/router';
+import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { Navbar } from './pages/navbar/navbar';
+import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-root',
@@ -12,21 +13,26 @@ import { Navbar } from './pages/navbar/navbar';
 export class App {
 
   showNavbar = false;
+  isAuthPage = false;
 
   constructor(private router: Router) {
-    this.router.events.subscribe(() => {
-      const url = this.router.url;
-
-      // Hide navbar on auth pages
-      this.showNavbar = !(
-        url === '/login' ||
-        url === '/register'
-      );
-    });
+    this.updateNavbarVisibility(this.router.url);
+    this.router.events
+      .pipe(filter(event => event instanceof NavigationEnd))
+      .subscribe(() => this.updateNavbarVisibility(this.router.url));
   }
 
 
   logout() {
     this.router.navigate(['/login']);
+  }
+
+  private updateNavbarVisibility(url: string): void {
+    const path = this.router.parseUrl(url).root.children['primary']?.segments
+      .map(segment => segment.path)
+      .join('/') || '';
+
+    this.isAuthPage = path === 'login' || path === 'register';
+    this.showNavbar = !this.isAuthPage;
   }
 }

@@ -46,18 +46,31 @@ app-navbar {
   z-index: 2000;
 }
 
+.page-content {
+  display: block;
+  width: 100%;
+  padding: 20px 0;
+  background: var(--tp-bg-app);
+  min-height: 100vh;
+}
+
+.page-content.with-navbar {
+  margin-top: 75px;
+  min-height: calc(100vh - 75px);
+}
+
+.page-content.auth-page {
+  padding-top: 0;
+}
+
 router-outlet {
   display: block;
   width: 100%;
-  margin-top: 75px;
-  padding: 20px 0;
-  background: var(--tp-bg-app);
-  min-height: calc(100vh - 75px);
 }
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 1023px) {
-  router-outlet {
+  .page-content.with-navbar {
     margin-top: 70px;
   }
   
@@ -67,13 +80,19 @@ router-outlet {
 }
 
 @media (max-width: 640px) {
-  router-outlet {
-    margin-top: 65px;
+  .page-content {
     padding: 16px 0;
+  }
+
+  .page-content.with-navbar {
+    margin-top: 65px;
+  }
+
+  .page-content.auth-page {
+    padding-top: 0;
   }
   
   app-navbar {
     height: 65px;
   }
 }
-

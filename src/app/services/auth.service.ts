@@ -1,25 +1,64 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { signal } from '@angular/core';
-import { Auth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, User } from '@angular/fire/auth';
+import { Auth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, User, setPersistence, browserLocalPersistence, indexedDBLocalPersistence } from '@angular/fire/auth';
+import { isPlatformBrowser } from '@angular/common';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
+  private static readonly LOGIN_STATE_KEY = 'taskflow_logged_in';
+
   isLoggedIn = signal(false);
   currentUser = signal<User | null>(null);
   loading = signal(false);
   errorMessage = signal<string | null>(null);
+  private authInitialized = false;
+  private authReadyResolver!: () => void;
+  private authReadyPromise: Promise<void>;
 
-  constructor(private auth: Auth) {
-    // Monitor Firebase auth state changes
+  constructor(private auth: Auth, @Inject(PLATFORM_ID) private platformId: Object) {
+    this.authReadyPromise = new Promise<void>((resolve) => {
+      this.authReadyResolver = resolve;
+    });
+
+    // Restore quick UI state from localStorage while Firebase initializes.
+    if (this.getStoredLoginState()) {
+      this.isLoggedIn.set(true);
+    }
+
+    void this.initializeAuthObserver();
+  }
+
+  private async initializeAuthObserver(): Promise<void> {
+    if (isPlatformBrowser(this.platformId)) {
+      try {
+        // Prefer IndexedDB persistence; fallback to localStorage persistence.
+        await setPersistence(this.auth, indexedDBLocalPersistence);
+      } catch {
+        try {
+          await setPersistence(this.auth, browserLocalPersistence);
+        } catch {
+          // If browser blocks persistent storage, continue with default behavior.
+        }
+      }
+    }
+
+    // Monitor Firebase auth state changes after persistence is configured.
     onAuthStateChanged(this.auth, (user: User | null) => {
       if (user) {
         this.isLoggedIn.set(true);
         this.currentUser.set(user);
+        this.setStoredLoginState(true);
       } else {
         this.isLoggedIn.set(false);
         this.currentUser.set(null);
+        this.setStoredLoginState(false);
+      }
+
+      if (!this.authInitialized) {
+        this.authInitialized = true;
+        this.authReadyResolver();
       }
     });
   }
@@ -46,8 +85,12 @@ export class AuthService {
         localStorage.setItem(`user_profile_${userCredential.user.uid}`, JSON.stringify(userData));
       }
       
-      this.currentUser.set(userCredential.user);
-      this.isLoggedIn.set(true);
+      // Keep signup and login as separate steps:
+      // Firebase signs in immediately after account creation, so sign out again.
+      await signOut(this.auth);
+      this.currentUser.set(null);
+      this.isLoggedIn.set(false);
+      this.setStoredLoginState(false);
       
       return Promise.resolve();
     } catch (error: any) {
@@ -66,10 +109,19 @@ export class AuthService {
     try {
       this.loading.set(true);
       this.errorMessage.set(null);
+
+      if (isPlatformBrowser(this.platformId)) {
+        try {
+          await setPersistence(this.auth, indexedDBLocalPersistence);
+        } catch {
+          await setPersistence(this.auth, browserLocalPersistence);
+        }
+      }
       
       const userCredential = await signInWithEmailAndPassword(this.auth, email, password);
       this.currentUser.set(userCredential.user);
       this.isLoggedIn.set(true);
+      this.setStoredLoginState(true);
       
       return Promise.resolve();
     } catch (error: any) {
@@ -92,6 +144,7 @@ export class AuthService {
       await signOut(this.auth);
       this.isLoggedIn.set(false);
       this.currentUser.set(null);
+      this.setStoredLoginState(false);
       
       return Promise.resolve();
     } catch (error: any) {
@@ -107,7 +160,14 @@ export class AuthService {
    * Get current login status
    */
   getCurrentLoginStatus(): boolean {
-    return this.isLoggedIn();
+    return this.isLoggedIn() || this.getStoredLoginState();
+  }
+
+  /**
+   * Wait for Firebase auth state restoration on app reload.
+   */
+  waitForAuthReady(): Promise<void> {
+    return this.authReadyPromise;
   }
 
   /**
@@ -199,5 +259,23 @@ export class AuthService {
     };
 
     return errorMessages[errorCode] || 'An error occurred during authentication. Please try again.';
+  }
+
+  private getStoredLoginState(): boolean {
+    if (typeof window === 'undefined') return false;
+    try {
+      return localStorage.getItem(AuthService.LOGIN_STATE_KEY) === 'true';
+    } catch {
+      return false;
+    }
+  }
+
+  private setStoredLoginState(isLoggedIn: boolean): void {
+    if (typeof window === 'undefined') return;
+    try {
+      localStorage.setItem(AuthService.LOGIN_STATE_KEY, String(isLoggedIn));
+    } catch {
+      // Ignore storage errors (private mode, quota, etc.)
+    }
   }
 }

@@ -112,7 +112,7 @@ export class Register {
       );
       
       // Navigate to dashboard on successful registration
-      this.router.navigate(['/dashboard']);
+      this.router.navigate(['/login']);
     } catch (error: any) {
       // Error message is already set in AuthService, but we'll also capture it here
       this.errorMessage.set(this.authService.getErrorMessage());
