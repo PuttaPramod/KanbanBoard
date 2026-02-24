@@ -19,6 +19,7 @@ export class Navbar implements OnInit, OnDestroy {
   isLoggedIn: Signal<boolean>;
   currentUser: Signal<any>;
   userEmail: Signal<string | null>;
+  isAuthenticated: Signal<boolean>;
   
   // Auth routes
   private authRoutes = ['/login', '/register'];
@@ -41,6 +42,7 @@ export class Navbar implements OnInit, OnDestroy {
   ) {
     this.isLoggedIn = this.authService.isLoggedIn;
     this.currentUser = this.authService.currentUser;
+    this.isAuthenticated = computed(() => this.isLoggedIn() || !!this.currentUser());
     this.userEmail = computed(() => {
       const user = this.currentUser();
       return user?.email || null;

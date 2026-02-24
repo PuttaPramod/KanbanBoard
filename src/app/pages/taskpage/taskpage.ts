@@ -24,6 +24,8 @@ const DEFAULT_COLUMNS = [
   styleUrls: ['./taskpage.css']
 })
 export class TaskPage implements OnInit {
+  pageEnter = false;
+
   // Task lists keyed by column id (supports built-in + custom columns)
   listByStatus: Record<string, Task[]> = {
     todo: [],
@@ -62,7 +64,17 @@ export class TaskPage implements OnInit {
   ngOnInit(): void {
     if (isPlatformBrowser(this.platformId)) {
       this.loadFromStorage();
+      this.replayPageEnterAnimation();
     }
+  }
+
+  private replayPageEnterAnimation(): void {
+    this.pageEnter = false;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        this.pageEnter = true;
+      });
+    });
   }
   isExpired(dueDate?: string): boolean {
     if (!dueDate) return false;

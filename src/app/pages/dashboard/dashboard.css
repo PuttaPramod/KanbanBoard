@@ -81,7 +81,7 @@
 
 .dashboard-shell {
   margin-top: 0;
-  background: linear-gradient(180deg, var(--color-gray-50) 0%, var(--color-gray-100) 50%, #ffffff 100%);
+  
   color: var(--tp-text);
   padding: 0;
   min-height: 100vh;
@@ -1616,4 +1616,93 @@ canvas {
   }
 }
 
+/* ===== PAGE ANIMATIONS ===== */
+.dashboard-shell {
+  animation: tfDashShellIn 0.55s ease-out both;
+}
+
+.dashboard-header {
+  animation: tfDashSlideDown 0.55s ease-out both;
+}
+
+.metrics-grid .dash-card,
+.analytics-section > div .dash-card,
+.completion-section .dash-card,
+.secondary-grid .dash-card {
+  opacity: 0;
+  animation: tfDashCardIn 0.55s ease-out both;
+}
+
+.metrics-grid .dash-card:nth-child(1),
+.analytics-section > div:nth-child(1) .dash-card,
+.secondary-grid .dash-card:nth-child(1) { animation-delay: 0.08s; }
+.metrics-grid .dash-card:nth-child(2),
+.analytics-section > div:nth-child(2) .dash-card,
+.secondary-grid .dash-card:nth-child(2) { animation-delay: 0.14s; }
+.metrics-grid .dash-card:nth-child(3),
+.secondary-grid .dash-card:nth-child(3) { animation-delay: 0.2s; }
+.metrics-grid .dash-card:nth-child(4),
+.secondary-grid .dash-card:nth-child(4) { animation-delay: 0.26s; }
+.secondary-grid .dash-card:nth-child(5) { animation-delay: 0.32s; }
+
+.completion-section .dash-card {
+  animation-delay: 0.12s;
+}
+
+.progress-bar {
+  animation: tfDashProgressIn 1s ease-out both;
+  transform-origin: left center;
+}
+
+@keyframes tfDashShellIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes tfDashSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes tfDashCardIn {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes tfDashProgressIn {
+  from {
+    opacity: 0.45;
+    transform: scaleX(0.08);
+  }
+  to {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-shell,
+  .dashboard-header,
+  .metrics-grid .dash-card,
+  .analytics-section > div .dash-card,
+  .completion-section .dash-card,
+  .secondary-grid .dash-card,
+  .progress-bar {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
 

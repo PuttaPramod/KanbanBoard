@@ -65,7 +65,7 @@
   display: flex;
   flex-direction: column;
   flex: 1;
-  background: var(--bg-main);
+  
   color: var(--text-primary);
   overflow: hidden;
 }
@@ -1188,5 +1188,91 @@
   
   .kanban-toolbar {
     background: linear-gradient(90deg, #2a1d4d 0%, #3d2556 50%, #4d1f5f 100%);
+  }
+}
+
+/* ===== PAGE ANIMATIONS ===== */
+.kanban-shell.page-enter {
+  animation: tfKanbanFadeIn 0.55s ease-out both;
+}
+
+.kanban-shell.page-enter .kanban-toolbar,
+.kanban-shell.page-enter .filter-bar {
+  animation: tfKanbanSlideDown 0.5s ease-out both;
+}
+
+.filter-bar {
+  animation-delay: 0.06s;
+}
+
+.kanban-shell.page-enter .column-wrapper {
+  opacity: 0;
+  animation: tfKanbanColumnIn 0.55s ease-out both;
+}
+
+.column-wrapper:nth-child(1) { animation-delay: 0.08s; }
+.column-wrapper:nth-child(2) { animation-delay: 0.14s; }
+.column-wrapper:nth-child(3) { animation-delay: 0.2s; }
+.column-wrapper:nth-child(4) { animation-delay: 0.26s; }
+.column-wrapper:nth-child(5) { animation-delay: 0.32s; }
+.column-wrapper:nth-child(n+6) { animation-delay: 0.38s; }
+
+.kanban-shell.page-enter .task-item {
+  animation: tfKanbanTaskIn 0.32s ease-out both;
+}
+
+.task-list-container .task-item:nth-child(1) { animation-delay: 0.04s; }
+.task-list-container .task-item:nth-child(2) { animation-delay: 0.08s; }
+.task-list-container .task-item:nth-child(3) { animation-delay: 0.12s; }
+.task-list-container .task-item:nth-child(4) { animation-delay: 0.16s; }
+.task-list-container .task-item:nth-child(n+5) { animation-delay: 0.2s; }
+
+@keyframes tfKanbanFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes tfKanbanSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes tfKanbanColumnIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes tfKanbanTaskIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kanban-shell,
+  .kanban-toolbar,
+  .filter-bar,
+  .column-wrapper,
+  .task-item {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
   }
 }

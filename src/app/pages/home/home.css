@@ -35,7 +35,6 @@
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
   color: var(--gray-900);
-  background-color: white;
   line-height: 1.6;
 }
 
@@ -48,6 +47,11 @@ body {
 .home-container {
   width: 100%;
   overflow-x: hidden;
+    background:
+    radial-gradient(circle at 10% 10%, rgba(59, 130, 246, 0.2) 0%, transparent 35%),
+    radial-gradient(circle at 90% 20%, rgba(236, 72, 153, 0.16) 0%, transparent 35%),
+    radial-gradient(circle at 60% 90%, rgba(16, 185, 129, 0.16) 0%, transparent 35%),
+    linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%) !important;
 }
 
 .section-container {
@@ -740,5 +744,90 @@ body {
   .btn-secondary-large {
     padding: 12px 20px;
     font-size: 0.95rem;
+  }
+}
+
+/* ===== PAGE ANIMATIONS ===== */
+.home-container.page-enter {
+  animation: tfHomeFadeIn 0.65s ease-out both;
+}
+
+.home-container.page-enter .hero-content > * {
+  opacity: 0;
+  animation: tfHomeRise 0.7s ease-out both;
+}
+
+.hero-content > *:nth-child(1) { animation-delay: 0.08s; }
+.hero-content > *:nth-child(2) { animation-delay: 0.16s; }
+.hero-content > *:nth-child(3) { animation-delay: 0.24s; }
+.hero-content > *:nth-child(4) { animation-delay: 0.32s; }
+
+.home-container.page-enter .overview-item,
+.home-container.page-enter .feature-card,
+.home-container.page-enter .benefit-item,
+.home-container.page-enter .stat-card {
+  opacity: 0;
+  animation: tfHomeCardIn 0.65s ease-out both;
+}
+
+.overview-grid .overview-item:nth-child(1),
+.features-grid .feature-card:nth-child(1),
+.benefits-grid .benefit-item:nth-child(1),
+.stats-grid .stat-card:nth-child(1) { animation-delay: 0.08s; }
+
+.overview-grid .overview-item:nth-child(2),
+.features-grid .feature-card:nth-child(2),
+.benefits-grid .benefit-item:nth-child(2),
+.stats-grid .stat-card:nth-child(2) { animation-delay: 0.16s; }
+
+.overview-grid .overview-item:nth-child(3),
+.features-grid .feature-card:nth-child(3),
+.benefits-grid .benefit-item:nth-child(3),
+.stats-grid .stat-card:nth-child(3) { animation-delay: 0.24s; }
+
+.features-grid .feature-card:nth-child(4),
+.benefits-grid .benefit-item:nth-child(4),
+.stats-grid .stat-card:nth-child(4) { animation-delay: 0.32s; }
+
+.features-grid .feature-card:nth-child(5) { animation-delay: 0.4s; }
+.features-grid .feature-card:nth-child(6) { animation-delay: 0.48s; }
+
+@keyframes tfHomeFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes tfHomeRise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes tfHomeCardIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-container,
+  .hero-content > *,
+  .overview-item,
+  .feature-card,
+  .benefit-item,
+  .stat-card {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
   }
 }

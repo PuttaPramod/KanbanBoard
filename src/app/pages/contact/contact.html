@@ -1,1 +1,28 @@
-<p>contact works!</p>
+<section class="about-page">
+  <div class="about-card">
+    <p class="tag">About Me</p>
+    <h1>{{ profile.name }}</h1>
+    <p class="role">{{ profile.role }}</p>
+    <p class="bio">{{ profile.bio }}</p>
+
+    <div class="info-grid">
+      <div class="info-item">
+        <span class="label">Email</span>
+        <span class="value">{{ profile.email }}</span>
+      </div>
+      <div class="info-item">
+        <span class="label">Location</span>
+        <span class="value">{{ profile.location }}</span>
+      </div>
+    </div>
+
+    <div class="skills">
+      <h2>Skills</h2>
+      <div class="skill-list">
+        @for (skill of profile.skills; track skill) {
+          <span class="skill-chip">{{ skill }}</span>
+        }
+      </div>
+    </div>
+  </div>
+</section>
