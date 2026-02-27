@@ -149,3 +149,11 @@ h1 {
     font-size: 1.6rem;
   }
 }
+
+/* ===== PLAIN COLOR REFRESH V2 ===== */
+.about-card::before { background: #0f766e; }
+.tag { color: #115e59; background: #ccfbf1; border-color: #99f6e4; }
+
+/* ===== PLAIN COLOR REFRESH V3 (FRESH) ===== */
+.about-card::before { background: #0ea5a4; }
+.tag { color: #0f766e; background: #ccfbf1; border-color: #99f6e4; }

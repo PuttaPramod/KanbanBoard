@@ -96,3 +96,31 @@ router-outlet {
     height: 65px;
   }
 }
+
+/* ===== APP THEME V2 ===== */
+:root {
+  --tp-primary: #0f766e;
+  --tp-primary-hover: #115e59;
+  --tp-primary-light: rgba(15, 118, 110, 0.1);
+  --tp-secondary: #0369a1;
+  --tp-bg-app: #f7f7f5;
+  --tp-bg-elevated: #ffffff;
+  --tp-border: #d9ddd6;
+  --tp-text: #1f2937;
+  --tp-text-secondary: #334155;
+  --tp-text-muted: #6b7280;
+}
+
+/* ===== APP THEME V3 (FRESH) ===== */
+:root {
+  --tp-primary: #0ea5a4;
+  --tp-primary-hover: #0f766e;
+  --tp-primary-light: rgba(14, 165, 164, 0.12);
+  --tp-secondary: #22c55e;
+  --tp-bg-app: #f8fafc;
+  --tp-bg-elevated: #ffffff;
+  --tp-border: #dbe4ea;
+  --tp-text: #1f2937;
+  --tp-text-secondary: #334155;
+  --tp-text-muted: #64748b;
+}

@@ -630,3 +630,34 @@
     animation: none;
   }
 }
+/* ===== PLAIN COLOR REFRESH V2 ===== */
+:host,.login-container {
+  --tp-primary: #0f766e;
+  --tp-primary-hover: #115e59;
+  --tp-primary-light: rgba(15,118,110,0.1);
+  --tp-bg-app: #f7f7f5;
+  --tp-border: #d9ddd6;
+  --tp-border-strong: #cfd5cd;
+  --tp-text-muted: #6b7280;
+}
+.brand-icon,.submit-btn { background: #0f766e; }
+.submit-btn:hover:not(:disabled) { background: #115e59; }
+.form-input:focus { border-color: #5eead4; box-shadow: 0 0 0 3px rgba(15,118,110,0.15); }
+.checkbox-input { accent-color: #0f766e; }
+.forgot-link,.signup-link { color: #0f766e; }
+.forgot-link:hover,.signup-link:hover { color: #115e59; }
+
+/* ===== PLAIN COLOR REFRESH V3 (FRESH) ===== */
+:host,.login-container {
+  --tp-primary: #0ea5a4;
+  --tp-primary-hover: #0f766e;
+  --tp-primary-light: rgba(14,165,164,0.12);
+  --tp-bg-app: #f8fafc;
+  --tp-border: #dbe4ea;
+}
+.brand-icon,.submit-btn { background: #0ea5a4; }
+.submit-btn:hover:not(:disabled) { background: #0f766e; }
+.form-input:focus { border-color: #5eead4; box-shadow: 0 0 0 3px rgba(14,165,164,0.16); }
+.checkbox-input { accent-color: #0ea5a4; }
+.forgot-link,.signup-link { color: #0ea5a4; }
+.forgot-link:hover,.signup-link:hover { color: #0f766e; }

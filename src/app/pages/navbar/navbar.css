@@ -487,3 +487,23 @@ html,
 :host + * {
   padding-top: 50px;
 }
+
+/* ===== PLAIN COLOR REFRESH V2 ===== */
+:host {
+  --primary: #0f766e;
+  --primary-dark: #115e59;
+  --primary-light: #ccfbf1;
+  --text-primary: #1f2937;
+  --text-secondary: #6b7280;
+  --bg-light: #f3f4f6;
+  --border: #d9ddd6;
+}
+.btn-primary,.mobile-link-highlight { background: #0f766e; }
+.btn-primary:hover,.mobile-link-highlight:hover { background: #115e59; }
+.logo-text { color: #0f766e; }
+
+/* ===== PLAIN COLOR REFRESH V3 (FRESH) ===== */
+:host { --primary: #0ea5a4; --primary-dark: #0f766e; --primary-light: #ccfbf1; --border: #dbe4ea; }
+.btn-primary,.mobile-link-highlight { background: #0ea5a4; }
+.btn-primary:hover,.mobile-link-highlight:hover { background: #0f766e; }
+.logo-text { color: #0ea5a4; }

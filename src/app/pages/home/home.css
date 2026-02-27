@@ -831,3 +831,60 @@ body {
     transform: none !important;
   }
 }
+
+/* ===== PLAIN COLOR REFRESH V2 ===== */
+.hero-section,.cta-section { background: #1f2937; }
+.overview-item,.feature-card,.status-item,.benefit-item,.stat-card { border-color: #d9ddd6; }
+.overview-item .item-number,.feature-icon { color: #0f766e; }
+.btn-primary-large { background: #0f766e; }
+.btn-primary-large:hover { background: #115e59; }
+.stat-card-primary,.stat-card-todo { border-left-color: #0f766e !important; }
+.stat-card-progress { border-left-color: #b45309 !important; }
+.stat-card-done { border-left-color: #15803d !important; }
+
+/* ===== PLAIN COLOR REFRESH V3 (FRESH) ===== */
+.hero-section,.cta-section { background: #0f172a; }
+.overview-item .item-number,.feature-icon { color: #0ea5a4; }
+.btn-primary-large { background: #0ea5a4; }
+.btn-primary-large:hover { background: #0f766e; }
+.stat-card-primary,.stat-card-todo { border-left-color: #0ea5a4 !important; }
+.stat-card-progress { border-left-color: #f59e0b !important; }
+.stat-card-done { border-left-color: #22c55e !important; }
+
+/* ===== CONSISTENCY FIX V4 ===== */
+.hero-section,
+.cta-section {
+  background: #ffffff;
+  color: #1f2937;
+  border-top: 1px solid #dbe4ea;
+  border-bottom: 1px solid #dbe4ea;
+}
+
+.hero-subtitle,
+.hero-description,
+.cta-section p {
+  color: #64748b;
+  opacity: 1;
+}
+
+.btn-primary,
+.btn-primary-large {
+  background: #0ea5a4;
+  color: #ffffff;
+}
+
+.btn-primary:hover,
+.btn-primary-large:hover {
+  background: #0f766e;
+}
+
+.btn-secondary,
+.btn-secondary-large {
+  color: #334155;
+  border-color: #cbd5e1;
+}
+
+.btn-secondary:hover,
+.btn-secondary-large:hover {
+  background: #f1f5f9;
+}

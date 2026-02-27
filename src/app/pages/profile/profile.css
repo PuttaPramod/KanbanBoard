@@ -469,3 +469,42 @@
     margin-left: 20px;
   }
 }
+
+/* ===== PLAIN COLOR REFRESH V2 ===== */
+:root {
+  --primary: #0f766e;
+  --primary-light: #14b8a6;
+  --primary-dark: #115e59;
+  --success: #15803d;
+  --warning: #b45309;
+  --danger: #b91c1c;
+  --info: #0369a1;
+  --text-primary: #1f2937;
+  --text-muted: #6b7280;
+  --bg-base: #f7f7f5;
+  --border-soft: #d9ddd6;
+}
+.section-title::after { background: #0f766e; }
+.profile-card { background: #1f2937; }
+.avatar-placeholder { background: #0f766e; }
+.progress-card-primary,.progress-card-todo { border-left-color: #0f766e; }
+.progress-card-progress { border-left-color: #b45309; }
+.progress-card-done { border-left-color: #15803d; }
+
+/* ===== PLAIN COLOR REFRESH V3 (FRESH) ===== */
+:root {
+  --primary: #0ea5a4;
+  --primary-light: #2dd4bf;
+  --primary-dark: #0f766e;
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --info: #06b6d4;
+  --bg-base: #f8fafc;
+  --border-soft: #dbe4ea;
+}
+.section-title::after { background: #0ea5a4; }
+.avatar-placeholder { background: #0ea5a4; }
+.progress-card-primary,.progress-card-todo { border-left-color: #0ea5a4; }
+.progress-card-progress { border-left-color: #f59e0b; }
+.progress-card-done { border-left-color: #22c55e; }

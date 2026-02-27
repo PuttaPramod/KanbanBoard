@@ -68,3 +68,37 @@ app-root {
 .mb-4 {
   margin-bottom: 1.5rem;
 }
+
+/* ===== GLOBAL PLAIN THEME V2 ===== */
+:root {
+  --app-primary: #0f766e;
+  --app-primary-hover: #115e59;
+  --app-success: #15803d;
+  --app-warning: #b45309;
+  --app-danger: #b91c1c;
+  --app-bg: #f7f7f5;
+  --app-surface: #ffffff;
+  --app-border: #d9ddd6;
+  --app-text: #1f2937;
+  --app-text-muted: #6b7280;
+}
+
+body {
+  background: var(--app-bg) !important;
+  color: var(--app-text);
+}
+
+/* ===== GLOBAL PLAIN THEME V3 (FRESH) ===== */
+:root {
+  --app-primary: #0ea5a4;
+  --app-primary-hover: #0f766e;
+  --app-success: #22c55e;
+  --app-warning: #f59e0b;
+  --app-danger: #ef4444;
+  --app-bg: #f8fafc;
+  --app-surface: #ffffff;
+  --app-border: #dbe4ea;
+  --app-text: #1f2937;
+  --app-text-muted: #64748b;
+}
+body { background: var(--app-bg) !important; }

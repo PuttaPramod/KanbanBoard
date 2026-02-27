@@ -6,6 +6,15 @@ import { RouterModule } from '@angular/router';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration } from 'chart.js';
 
+type StatusDef = { id: string; title: string; color: string };
+const BASE_STATUS_DEFS: StatusDef[] = [
+  { id: 'todo', title: 'To Do', color: '#14b8a6' },
+  { id: 'inprogress', title: 'In Progress', color: '#f59e0b' },
+  { id: 'done', title: 'Completed', color: '#22c55e' },
+  { id: 'delivered', title: 'Delivered', color: '#0ea5e9' }
+];
+const EXTRA_STATUS_COLORS = ['#8b5cf6', '#ef4444', '#6366f1', '#f97316', '#84cc16', '#06b6d4'];
+
 @Component({
   selector: 'app-dashboard-page',
   standalone: true,
@@ -25,13 +34,37 @@ export class Dashboard implements OnInit {
   thisWeekCount = 0;
   completionRate = 0;
   teamMembersCount = 0;
-  recentTasks: Task[] = [];
+  filteredRecentTasks: Task[] = [];
+  allTasks: Task[] = [];
+
+  atRiskCount = 0;
+  topAssignee = 'Unassigned';
+  focusTitle = 'All systems healthy';
+  focusMessage = 'No urgent risks detected.';
+  upcomingTasks: Task[] = [];
+  priorityCounts: Record<'Low' | 'Medium' | 'High', number> = { Low: 0, Medium: 0, High: 0 };
+  statusMix: Array<{ key: string; label: string; count: number; percent: number; tone: string }> = [];
 
   // Pie chart data
   pieChartData: Array<{ label: string; value: number; color: string }> = [];
   pieChartOptions: ChartConfiguration<'doughnut'>['options'];
   pieChartLabels: string[] = [];
   pieChartDatasets: ChartConfiguration<'doughnut'>['data']['datasets'] = [];
+  statusDefs: StatusDef[] = [...BASE_STATUS_DEFS];
+  private statusTitleById: Record<string, string> = {
+    todo: 'To Do',
+    inprogress: 'In Progress',
+    done: 'Completed',
+    delivered: 'Delivered'
+  };
+  private statusColorById: Record<string, string> = {
+    todo: '#14b8a6',
+    inprogress: '#f59e0b',
+    done: '#22c55e',
+    delivered: '#0ea5e9'
+  };
+  readonly completionRadius = 48;
+  readonly completionCircumference = 2 * Math.PI * this.completionRadius;
 
   constructor(@Inject(PLATFORM_ID) private platformId: Object) {}
 
@@ -48,6 +81,9 @@ export class Dashboard implements OnInit {
     this.pieChartOptions = {
       responsive: true,
       maintainAspectRatio: false,
+      cutout: '0%',
+      radius: '88%',
+      rotation: -90,
       interaction: {
         mode: 'nearest',
         intersect: false
@@ -58,16 +94,14 @@ export class Dashboard implements OnInit {
         },
         tooltip: {
           enabled: true,
-          backgroundColor: 'rgba(0, 0, 0, 0.9)',
+          backgroundColor: 'rgba(8, 28, 36, 0.92)',
           padding: 12,
-          titleFont: { size: 14, weight: 700 },
-          bodyFont: { size: 13 },
-          cornerRadius: 8,
+          titleFont: { size: 13, weight: 700 },
+          bodyFont: { size: 12 },
+          cornerRadius: 10,
           displayColors: true,
-          borderColor: 'rgba(255, 255, 255, 0.2)',
+          borderColor: 'rgba(153, 246, 228, 0.28)',
           borderWidth: 1,
-          yAlign: 'bottom',
-          xAlign: 'center',
           callbacks: {
             title: (context: any) => {
               return context[0]?.label || '';
@@ -83,9 +117,9 @@ export class Dashboard implements OnInit {
       },
       animation: {
         animateRotate: true,
-        animateScale: false,
-        duration: 800,
-        easing: 'easeInOutQuart'
+        animateScale: true,
+        duration: 900,
+        easing: 'easeOutCubic'
       }
     } as any;
   }
@@ -110,13 +144,16 @@ export class Dashboard implements OnInit {
       if (v2) {
         const p = JSON.parse(v2);
         const listByStatus: Record<string, Task[]> = p.listByStatus || {};
+        const columns: Array<{ id: string; title: string }> = Array.isArray(p.columns) ? p.columns : [];
+        this.buildStatusDefinitions(columns, listByStatus);
         const all: Task[] = [];
         Object.values(listByStatus).forEach((arr: unknown) => {
           if (Array.isArray(arr)) all.push(...arr);
         });
-        this.recentTasks = all;
+        this.allTasks = all;
         return;
       }
+      this.buildStatusDefinitions([], {});
       const v1 = localStorage.getItem('kanban_pro_v1');
       if (v1) {
         const p = JSON.parse(v1);
@@ -124,19 +161,22 @@ export class Dashboard implements OnInit {
         const inprogress = p.inprogress || [];
         const done = p.done || [];
         const delivered = p.delivered || [];
-        this.recentTasks = [...todo, ...inprogress, ...done, ...delivered];
+        this.allTasks = [...todo, ...inprogress, ...done, ...delivered];
       }
     } catch {
-      this.recentTasks = [];
+      this.allTasks = [];
     }
   }
 
   private computeMetrics(): void {
-    const all = this.recentTasks;
-    this.todoCount = all.filter(t => t.status === 'todo').length;
-    this.inprogressCount = all.filter(t => t.status === 'inprogress').length;
-    this.doneCount = all.filter(t => t.status === 'done').length;
-    this.deliveredCount = all.filter(t => t.status === 'delivered').length;
+    const all = this.allTasks;
+    const statusCountMap = new Map<string, number>();
+    this.statusDefs.forEach(s => statusCountMap.set(s.id, 0));
+    all.forEach(task => statusCountMap.set(task.status, (statusCountMap.get(task.status) || 0) + 1));
+    this.todoCount = statusCountMap.get('todo') || 0;
+    this.inprogressCount = statusCountMap.get('inprogress') || 0;
+    this.doneCount = statusCountMap.get('done') || 0;
+    this.deliveredCount = statusCountMap.get('delivered') || 0;
     this.totalTasks = all.length;
 
     const today = new Date();
@@ -159,33 +199,181 @@ export class Dashboard implements OnInit {
       if (d >= startOfWeek && d <= endOfWeek) this.thisWeekCount++;
     });
 
+    // Risk: pending tasks due in next 48 hours
+    const dueSoonLimit = new Date(todayEnd);
+    dueSoonLimit.setDate(dueSoonLimit.getDate() + 2);
+    this.atRiskCount = all.filter(task => {
+      if (!task.dueDate) return false;
+      const d = new Date(task.dueDate + 'T23:59:59');
+      const isPending = task.status !== 'done' && task.status !== 'delivered';
+      return isPending && d >= todayStart && d <= dueSoonLimit;
+    }).length;
+
     const completedTotal = this.doneCount + this.deliveredCount;
     this.completionRate = this.totalTasks > 0 ? Math.round((completedTotal / this.totalTasks) * 100) : 0;
 
     // Count unique assignees
     const uniqueAssignees = new Set<string>();
+    const assigneeCount = new Map<string, number>();
     all.forEach(task => {
       if (task.assignee && task.assignee.trim()) {
-        uniqueAssignees.add(task.assignee);
+        const assignee = task.assignee.trim();
+        uniqueAssignees.add(assignee);
+        assigneeCount.set(assignee, (assigneeCount.get(assignee) || 0) + 1);
       }
     });
     this.teamMembersCount = uniqueAssignees.size;
-
-    this.recentTasks = all
-      .slice()
-      .sort((a, b) => (b.id || '').localeCompare(a.id || ''))
-      .slice(0, 8);
+    this.topAssignee = this.getTopAssignee(assigneeCount);
+    this.updateFocusBanner();
+    this.updatePriorityAndUpcoming();
+    this.updateStatusMix(statusCountMap);
 
     // Build pie chart data
-    this.pieChartData = [
-      { label: 'To Do', value: this.todoCount, color: '#3b82f6' },
-      { label: 'In Progress', value: this.inprogressCount, color: '#f59e0b' },
-      { label: 'Completed', value: this.doneCount, color: '#10b981' },
-      { label: 'Delivered', value: this.deliveredCount, color: '#8b5cf6' }
-    ].filter(item => item.value > 0);
+    this.pieChartData = this.statusDefs
+      .map(def => ({ label: def.title, value: statusCountMap.get(def.id) || 0, color: def.color }))
+      .filter(item => item.value > 0);
 
     // Update Chart.js pie chart
     this.updatePieChart();
+    this.updateRecentTasksView();
+  }
+
+  private getTopAssignee(assigneeCount: Map<string, number>): string {
+    if (assigneeCount.size === 0) return 'Unassigned';
+    let leader = 'Unassigned';
+    let max = 0;
+    assigneeCount.forEach((count, assignee) => {
+      if (count > max) {
+        max = count;
+        leader = assignee;
+      }
+    });
+    return leader;
+  }
+
+  private updateFocusBanner(): void {
+    if (this.overdueCount > 0) {
+      this.focusTitle = 'Attention needed';
+      this.focusMessage = `${this.overdueCount} overdue task${this.overdueCount > 1 ? 's are' : ' is'} blocking flow.`;
+      return;
+    }
+    if (this.atRiskCount > 0) {
+      this.focusTitle = 'Due soon pressure';
+      this.focusMessage = `${this.atRiskCount} pending task${this.atRiskCount > 1 ? 's are' : ' is'} due in the next 48 hours.`;
+      return;
+    }
+    if (this.completionRate >= 70) {
+      this.focusTitle = 'Strong momentum';
+      this.focusMessage = `Completion is at ${this.completionRate}% with steady delivery pace.`;
+      return;
+    }
+    this.focusTitle = 'Build momentum';
+    this.focusMessage = 'Move active work to done to lift sprint velocity.';
+  }
+
+  private updatePriorityAndUpcoming(): void {
+    this.priorityCounts = { Low: 0, Medium: 0, High: 0 };
+    const pending = this.allTasks.filter(task => task.status !== 'done' && task.status !== 'delivered');
+
+    pending.forEach(task => {
+      if (task.priority === 'Low' || task.priority === 'Medium' || task.priority === 'High') {
+        this.priorityCounts[task.priority]++;
+      }
+    });
+
+    this.upcomingTasks = pending
+      .filter(task => !!task.dueDate)
+      .sort((a, b) => {
+        const aTime = new Date((a.dueDate || '') + 'T00:00:00').getTime();
+        const bTime = new Date((b.dueDate || '') + 'T00:00:00').getTime();
+        return aTime - bTime;
+      })
+      .slice(0, 6);
+  }
+
+  private updateStatusMix(statusCountMap: Map<string, number>): void {
+    const safeTotal = this.totalTasks || 1;
+    this.statusMix = this.statusDefs.map(def => {
+      const count = statusCountMap.get(def.id) || 0;
+      return {
+        key: def.id,
+        label: def.title,
+        count,
+        percent: Math.round((count / safeTotal) * 100),
+        tone: def.id
+      };
+    });
+  }
+
+  private buildStatusDefinitions(
+    columns: Array<{ id: string; title: string }>,
+    listByStatus: Record<string, Task[]>
+  ): void {
+    const defs = [...BASE_STATUS_DEFS];
+    const seen = new Set(defs.map(d => d.id));
+    const provided = Array.isArray(columns) && columns.length > 0
+      ? columns
+      : Object.keys(listByStatus).map(id => ({ id, title: this.formatStatusTitle(id) }));
+
+    provided.forEach((col, idx) => {
+      if (!col?.id || seen.has(col.id)) return;
+      const color = this.getCustomStatusColor(col.id, idx);
+      defs.push({ id: col.id, title: col.title || this.formatStatusTitle(col.id), color });
+      seen.add(col.id);
+    });
+
+    provided.forEach(col => {
+      const base = defs.find(d => d.id === col.id);
+      if (base && col.title?.trim()) base.title = col.title.trim();
+    });
+
+    this.statusDefs = defs;
+    this.statusTitleById = {};
+    this.statusColorById = {};
+    defs.forEach(def => {
+      this.statusTitleById[def.id] = def.title;
+      this.statusColorById[def.id] = def.color;
+    });
+  }
+
+  private formatStatusTitle(status: string): string {
+    if (!status) return 'Other';
+    if (status.startsWith('custom-')) return 'Custom';
+    return status
+      .replace(/[-_]+/g, ' ')
+      .replace(/\b\w/g, c => c.toUpperCase());
+  }
+
+  getDueBadge(task: Task): string {
+    if (!task.dueDate) return 'No due date';
+    const today = new Date();
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const due = new Date(task.dueDate + 'T00:00:00');
+    const diffDays = Math.round((due.getTime() - todayStart.getTime()) / (24 * 60 * 60 * 1000));
+    if (diffDays < 0) return `Overdue ${Math.abs(diffDays)}d`;
+    if (diffDays === 0) return 'Due today';
+    if (diffDays === 1) return 'Due tomorrow';
+    return `Due in ${diffDays}d`;
+  }
+
+  getPriorityPercent(level: 'Low' | 'Medium' | 'High'): number {
+    const total = this.priorityCounts.Low + this.priorityCounts.Medium + this.priorityCounts.High;
+    if (!total) return 0;
+    return Math.round((this.priorityCounts[level] / total) * 100);
+  }
+
+  getPriorityClass(level: string): string {
+    const normalized = (level || '').toLowerCase();
+    if (normalized === 'high') return 'high';
+    if (normalized === 'medium') return 'medium';
+    return 'low';
+  }
+
+  private updateRecentTasksView(): void {
+    this.filteredRecentTasks = this.allTasks
+      .slice()
+      .sort((a, b) => (b.id || '').localeCompare(a.id || ''))
+      .slice(0, 5);
   }
 
   private updatePieChart(): void {
@@ -198,24 +386,22 @@ export class Dashboard implements OnInit {
       {
         data: values,
         backgroundColor: colors,
-        borderColor: borderColors,
-        borderWidth: 3,
-        borderRadius: 6,
-        hoverOffset: 10,
-        hoverBorderWidth: 2,
-        spacing: 2
+        borderColor: '#dfe8ed',
+        borderWidth: 2,
+        borderRadius: 0,
+        hoverOffset: 0,
+        hoverBorderWidth: 0,
+        spacing: 0
       }
     ];
   }
 
+  getCompletionOffset(): number {
+    return this.completionCircumference * (1 - this.completionRate / 100);
+  }
+
   getStatusLabel(task: Task): string {
-    switch (task.status) {
-      case 'todo': return 'To Do';
-      case 'inprogress': return 'In Progress';
-      case 'done': return 'Completed';
-      case 'delivered': return 'Delivered';
-      default: return (task.status?.startsWith('custom-') ? 'Custom' : task.status) || 'Other';
-    }
+    return this.statusTitleById[task.status] || this.formatStatusTitle(task.status);
   }
 
   getStatusClass(task: Task): string {
@@ -226,6 +412,42 @@ export class Dashboard implements OnInit {
       case 'delivered': return 'delivered';
       default: return 'custom';
     }
+  }
+
+  getStatusBadgeStyle(task: Task): Record<string, string> | null {
+    if (task.status === 'todo' || task.status === 'inprogress' || task.status === 'done' || task.status === 'delivered') {
+      return null;
+    }
+    const hex = this.statusColorById[task.status] || '#94a3b8';
+    return {
+      color: hex,
+      background: this.withAlpha(hex, 0.16),
+      borderColor: this.withAlpha(hex, 0.36)
+    };
+  }
+
+  getStatusMixStyle(key: string): Record<string, string> {
+    return { background: this.statusColorById[key] || '#94a3b8' };
+  }
+
+  private withAlpha(hex: string, alpha: number): string {
+    const clean = hex.replace('#', '');
+    const full = clean.length === 3
+      ? clean.split('').map(c => c + c).join('')
+      : clean;
+    const num = Number.parseInt(full, 16);
+    if (Number.isNaN(num)) return `rgba(148, 163, 184, ${alpha})`;
+    const r = (num >> 16) & 255;
+    const g = (num >> 8) & 255;
+    const b = num & 255;
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
+
+  private getCustomStatusColor(statusId: string, seedIndex: number): string {
+    let hash = 0;
+    for (let i = 0; i < statusId.length; i++) hash = (hash * 31 + statusId.charCodeAt(i)) >>> 0;
+    const idx = (hash + seedIndex) % EXTRA_STATUS_COLORS.length;
+    return EXTRA_STATUS_COLORS[idx];
   }
 
   getPieChartPercentage(value: number): number {
