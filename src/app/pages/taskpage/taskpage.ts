@@ -25,6 +25,14 @@ const DEFAULT_COLUMNS = [
 })
 export class TaskPage implements OnInit {
   pageEnter = false;
+  notifications: Array<{
+    id: number;
+    type: 'success' | 'info' | 'warning' | 'danger';
+    title: string;
+    message: string;
+    time: string;
+  }> = [];
+  private notificationSeed = 0;
 
   // Task lists keyed by column id (supports built-in + custom columns)
   listByStatus: Record<string, Task[]> = {
@@ -169,6 +177,7 @@ export class TaskPage implements OnInit {
     this.listByStatus[id] = [];
     this.saveToStorage();
     this.closeAddColumnModal();
+    this.pushNotification('info', 'Column created', `"${title}" is ready for tasks.`);
     this.cdr.markForCheck();
   }
 
@@ -206,6 +215,7 @@ export class TaskPage implements OnInit {
     this.columns = this.columns.filter(c => c.id !== col.id);
     delete this.listByStatus[col.id];
     this.saveToStorage();
+    this.pushNotification('danger', 'Column deleted', `"${col.title}" was removed.`);
     this.cdr.markForCheck();
   }
 
@@ -249,8 +259,11 @@ export class TaskPage implements OnInit {
     if (!this.tempTask.title?.trim()) return;
 
     if (this.editingTask) {
+      const previousTitle = this.editingTask.title;
       Object.assign(this.editingTask, this.tempTask);
       if (this.tempTask.description === undefined) this.editingTask.description = '';
+      const label = this.editingTask.id || previousTitle || 'Task';
+      this.pushNotification('warning', 'Task updated', `${label} was updated.`);
     } else {
       const newTask: Task = {
         ...(this.tempTask as Task),
@@ -260,6 +273,8 @@ export class TaskPage implements OnInit {
       };
       const list = this.getListByStatus(newTask.status);
       list.unshift(newTask);
+      const colLabel = this.getColumnTitle(newTask.status);
+      this.pushNotification('success', 'Task added', `${newTask.id} added to ${colLabel}.`);
     }
     this.saveToStorage();
     this.closeModal();
@@ -278,11 +293,16 @@ export class TaskPage implements OnInit {
       );
 
       const task = event.container.data[event.currentIndex];
+      const previousStatus = task.status;
       task.status = newStatus;
       
       // Auto-set dates
       if (task.status === 'done') task.completedDate = new Date().toISOString();
       if (task.status === 'delivered') task.deliveredDate = new Date().toISOString();
+
+      const fromLabel = this.getColumnTitle(previousStatus);
+      const toLabel = this.getColumnTitle(newStatus);
+      this.pushNotification('info', 'Task moved', `${task.id} moved from ${fromLabel} to ${toLabel}.`);
     }
     this.saveToStorage();
   }
@@ -298,6 +318,7 @@ export class TaskPage implements OnInit {
       const idx = list.findIndex(t => t.id === task.id);
       if (idx > -1) list.splice(idx, 1);
       this.saveToStorage();
+      this.pushNotification('danger', 'Task deleted', `${task.id} was removed.`);
     }
   }
 
@@ -337,5 +358,27 @@ export class TaskPage implements OnInit {
       };
       this.saveToStorage();
     }
+  }
+
+  private getColumnTitle(status: string): string {
+    const col = this.columns.find(c => c.id === status);
+    return col?.title || status.replace(/[-_]+/g, ' ');
+  }
+
+  private pushNotification(
+    type: 'success' | 'info' | 'warning' | 'danger',
+    title: string,
+    message: string
+  ): void {
+    const id = ++this.notificationSeed;
+    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    this.notifications = [{ id, type, title, message, time }, ...this.notifications].slice(0, 6);
+    this.cdr.markForCheck();
+    setTimeout(() => this.dismissNotification(id), 4200);
+  }
+
+  dismissNotification(id: number): void {
+    this.notifications = this.notifications.filter(note => note.id !== id);
+    this.cdr.markForCheck();
   }
 }
