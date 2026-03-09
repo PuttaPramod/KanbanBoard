@@ -36,7 +36,6 @@ export class Dashboard implements OnInit {
   teamMembersCount = 0;
   filteredRecentTasks: Task[] = [];
   allTasks: Task[] = [];
-
   atRiskCount = 0;
   topAssignee = 'Unassigned';
   focusTitle = 'All systems healthy';
