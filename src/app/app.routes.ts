@@ -10,14 +10,18 @@ import { AuthGuard } from './guards/auth.guard';
 import { Home } from './pages/home/home';
 
 export const routes: Routes = [
-  { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+  { path: '', component: Dashboard },   // ✅ public homepage
+
   { path: 'login', component: Login },
   { path: 'register', component: Register },
+
   { path: 'dashboard', component: Dashboard, canActivate: [AuthGuard] },
   { path: 'tasks', component: TaskPage, canActivate: [AuthGuard] },
   { path: 'contact', component: Contact, canActivate: [AuthGuard] },
   { path: 'profile', component: Profile, canActivate: [AuthGuard] },
+
   { path: 'navbar', component: Navbar },
   { path: 'home', component: Home },
+
   { path: '**', redirectTo: 'login' }
 ];
