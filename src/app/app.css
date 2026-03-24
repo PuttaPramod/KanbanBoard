@@ -1,0 +1,126 @@
+/* ============================================
+   APP — Global Styles
+   ============================================ */
+
+:root {
+  --tp-primary: #0b74de;
+  --tp-primary-hover: #075fa8;
+  --tp-primary-light: rgba(11, 116, 222, 0.1);
+  --tp-secondary: #06b6d4;
+  --tp-bg-app: #f1f5f9;
+  --tp-bg-elevated: #ffffff;
+  --tp-border: #e2e8f0;
+  --tp-text: #0f172a;
+  --tp-text-secondary: #475569;
+  --tp-text-muted: #64748b;
+  --tp-radius-md: 10px;
+  --tp-radius-lg: 14px;
+  --tp-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
+  --tp-shadow-md: 0 4px 12px rgba(15, 23, 42, 0.1);
+  --tp-transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --navbar-height: 75px;
+}
+
+/* ===== GLOBAL LAYOUT ===== */
+:host {
+  display: block;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+/* ===== PAGE STRUCTURE ===== */
+app-navbar {
+  display: block;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  z-index: 2000;
+}
+
+.page-content {
+  display: block;
+  width: 100%;
+  padding: 20px 0;
+  background: var(--tp-bg-app);
+  min-height: 100vh;
+}
+
+.page-content.with-navbar {
+  margin-top: 75px;
+  min-height: calc(100vh - 75px);
+}
+
+.page-content.auth-page {
+  padding-top: 28px;
+}
+
+router-outlet {
+  display: block;
+  width: 100%;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 1023px) {
+  .page-content.with-navbar {
+    margin-top: 70px;
+  }
+  
+  app-navbar {
+    height: 70px;
+  }
+}
+
+@media (max-width: 640px) {
+  .page-content {
+    padding: 16px 0;
+  }
+
+  .page-content.with-navbar {
+    margin-top: 65px;
+  }
+
+  .page-content.auth-page {
+    padding-top: 20px;
+  }
+  
+  app-navbar {
+    height: 65px;
+  }
+}
+
+/* ===== APP THEME V2 ===== */
+:root {
+  --tp-primary: #0f766e;
+  --tp-primary-hover: #115e59;
+  --tp-primary-light: rgba(15, 118, 110, 0.1);
+  --tp-secondary: #0369a1;
+  --tp-bg-app: #f7f7f5;
+  --tp-bg-elevated: #ffffff;
+  --tp-border: #d9ddd6;
+  --tp-text: #1f2937;
+  --tp-text-secondary: #334155;
+  --tp-text-muted: #6b7280;
+}
+
+/* ===== APP THEME V3 (FRESH) ===== */
+:root {
+  --tp-primary: #0ea5a4;
+  --tp-primary-hover: #0f766e;
+  --tp-primary-light: rgba(14, 165, 164, 0.12);
+  --tp-secondary: #22c55e;
+  --tp-bg-app: #f8fafc;
+  --tp-bg-elevated: #ffffff;
+  --tp-border: #dbe4ea;
+  --tp-text: #1f2937;
+  --tp-text-secondary: #334155;
+  --tp-text-muted: #64748b;
+}

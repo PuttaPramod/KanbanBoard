@@ -1,0 +1,72 @@
+<section class="contact-page">
+  <div class="contact-shell">
+    <article class="contact-hero">
+      <div class="hero-copy">
+        <p class="hero-tag">Contact TaskFlow</p>
+        <h1>Let’s build better team flow together.</h1>
+        <p class="hero-text">
+          Reach out for product questions, feature feedback, onboarding support, or collaboration around smarter task management workflows.
+        </p>
+
+        <div class="hero-highlights">
+          @for (item of highlights; track item.title) {
+            <div class="highlight-card">
+              <span>{{ item.title }}</span>
+              <strong>{{ item.value }}</strong>
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="hero-orbit" aria-hidden="true">
+        <div class="orbit-ring orbit-ring-a"></div>
+        <div class="orbit-ring orbit-ring-b"></div>
+        <div class="orbit-core">
+          <span>TaskFlow</span>
+        </div>
+      </div>
+    </article>
+
+    <section class="contact-grid">
+      <article class="contact-panel">
+        <div class="panel-head">
+          <p class="panel-tag">How We Help</p>
+          <h2>Support that fits product, project, and classroom needs</h2>
+        </div>
+
+        <div class="channel-list">
+          @for (item of channels; track item.title) {
+            <div class="channel-card">
+              <div class="channel-top">
+                <h3>{{ item.title }}</h3>
+                <span class="channel-badge">{{ item.badge }}</span>
+              </div>
+              <p>{{ item.description }}</p>
+            </div>
+          }
+        </div>
+      </article>
+
+      <article class="contact-panel accent-panel">
+        <div class="panel-head">
+          <p class="panel-tag">Quick Reach</p>
+          <h2>Use official project channels instead of personal details</h2>
+        </div>
+
+        <div class="contact-points">
+          @for (item of contactPoints; track item.label) {
+            <div class="contact-point">
+              <span class="point-label">{{ item.label }}</span>
+              <strong>{{ item.value }}</strong>
+            </div>
+          }
+        </div>
+
+        <div class="notice-card">
+          <p>Privacy-first setup</p>
+          <strong>Personal phone numbers, private emails, and home addresses are intentionally not displayed on this page.</strong>
+        </div>
+      </article>
+    </section>
+  </div>
+</section>

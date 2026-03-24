@@ -1,0 +1,214 @@
+<div class="dashboard-shell">
+  <main class="dashboard-grid">
+    <aside class="dashboard-sidebar">
+      <article class="hero-card">
+        <p class="hero-eyebrow">TaskFlow</p>
+        <h1>Control Hub</h1>
+        <p class="hero-copy">Monitor sprint health, team velocity, and upcoming pressure points in one place.</p>
+        <a class="hero-button" routerLink="/tasks">
+          <span>Go To Board</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="m13 6 6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+      </article>
+
+      <article class="focus-card">
+        <p class="section-eyebrow">Focus</p>
+        <h2>{{ focusTitle }}</h2>
+        <p class="focus-copy">{{ focusMessage }}</p>
+
+        <div class="focus-stat">
+          <span class="focus-stat-label">Top Contributor</span>
+          <strong>{{ topAssignee }}</strong>
+        </div>
+
+        <div class="focus-stat">
+          <span class="focus-stat-label">At Risk (48h)</span>
+          <strong>{{ atRiskCount }} task{{ atRiskCount !== 1 ? 's' : '' }}</strong>
+        </div>
+      </article>
+
+      <article class="panel completion-panel">
+        <div class="panel-head">
+          <h2>Completion Rate</h2>
+        </div>
+
+        <div class="completion-ring-wrap" role="progressbar" [attr.aria-valuenow]="completionRate" aria-valuemin="0" aria-valuemax="100">
+          <svg class="completion-ring" viewBox="0 0 120 120" aria-hidden="true">
+            <circle class="ring-track" cx="60" cy="60" [attr.r]="completionRadius"></circle>
+            <circle
+              class="ring-value"
+              cx="60"
+              cy="60"
+              [attr.r]="completionRadius"
+              [style.strokeDasharray.px]="completionCircumference"
+              [style.strokeDashoffset.px]="getCompletionOffset()"
+            ></circle>
+          </svg>
+          <div class="ring-label">
+            <strong>{{ completionRate }}%</strong>
+            <span>Completed</span>
+          </div>
+        </div>
+
+        <div class="completion-stats">
+          <span><strong>{{ todayCount }}</strong> Due Today</span>
+          <span><strong>{{ thisWeekCount }}</strong> This Week</span>
+          <span><strong>{{ teamMembersCount }}</strong> Team Members</span>
+        </div>
+      </article>
+    </aside>
+
+    <section class="dashboard-content">
+      <section class="top-metrics">
+        <article class="metric-card total">
+          <p class="metric-label">Total Tasks</p>
+          <p class="metric-value">{{ totalTasks }}</p>
+        </article>
+        <article class="metric-card todo">
+          <p class="metric-label">To Do</p>
+          <p class="metric-value">{{ todoCount }}</p>
+        </article>
+        <article class="metric-card inprogress">
+          <p class="metric-label">In Progress</p>
+          <p class="metric-value">{{ inprogressCount }}</p>
+        </article>
+        <article class="metric-card done">
+          <p class="metric-label">Completed</p>
+          <p class="metric-value">{{ doneCount }}</p>
+        </article>
+        <article class="metric-card delivered">
+          <p class="metric-label">Delivered</p>
+          <p class="metric-value">{{ deliveredCount }}</p>
+        </article>
+        <article class="metric-card overdue">
+          <p class="metric-label">Overdue</p>
+          <p class="metric-value">{{ overdueCount }}</p>
+        </article>
+      </section>
+
+      <section class="analytics-grid">
+        <article class="panel chart-panel">
+          <div class="panel-head compact">
+            <h2>Task Distribution</h2>
+          </div>
+
+          <div class="chart-layout">
+            <div class="chart-wrap">
+              @if (pieChartLabels.length > 0) {
+                <canvas
+                  baseChart
+                  [type]="'doughnut'"
+                  [data]="{ labels: pieChartLabels, datasets: pieChartDatasets }"
+                  [options]="pieChartOptions"
+                  class="chart-canvas"
+                ></canvas>
+              } @else {
+                <div class="chart-empty">No tasks yet</div>
+              }
+            </div>
+
+            @if (pieChartData.length > 0) {
+              <div class="legend-grid chart-legend">
+                @for (item of pieChartData; track item.label) {
+                  <div class="legend-row">
+                    <span class="legend-dot" [style.background-color]="item.color"></span>
+                    <span class="legend-name">{{ item.label }}</span>
+                    <span class="legend-count">{{ item.value }}</span>
+                    <span class="legend-percent">{{ getPieChartPercentage(item.value) }}%</span>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </article>
+
+        <article class="panel mix-panel">
+          <div class="panel-head compact">
+            <h2>Workload Mix</h2>
+          </div>
+
+          <div class="mix-group">
+            <p class="mix-title">By Priority</p>
+            <div class="mix-row">
+              <span>High</span>
+              <div class="mix-track"><div class="mix-fill high" [style.width.%]="getPriorityPercent('High')"></div></div>
+              <strong>{{ priorityCounts.High }}</strong>
+            </div>
+            <div class="mix-row">
+              <span>Medium</span>
+              <div class="mix-track"><div class="mix-fill medium" [style.width.%]="getPriorityPercent('Medium')"></div></div>
+              <strong>{{ priorityCounts.Medium }}</strong>
+            </div>
+            <div class="mix-row">
+              <span>Low</span>
+              <div class="mix-track"><div class="mix-fill low" [style.width.%]="getPriorityPercent('Low')"></div></div>
+              <strong>{{ priorityCounts.Low }}</strong>
+            </div>
+          </div>
+
+          <div class="mix-group">
+            <p class="mix-title">By Status</p>
+            @for (item of statusMix; track item.key) {
+              <div class="mix-row">
+                <span>{{ item.label }}</span>
+                <div class="mix-track"><div class="mix-fill" [style.width.%]="item.percent" [ngStyle]="getStatusMixStyle(item.key)"></div></div>
+                <strong>{{ item.count }}</strong>
+              </div>
+            }
+          </div>
+        </article>
+      </section>
+
+      <section class="insights-grid">
+        <article class="panel capacity-panel">
+          <div class="panel-head">
+            <h2>Team Capacity</h2>
+            <span class="count-pill">{{ assigneeLoad.length }}</span>
+          </div>
+
+          @if (assigneeLoad.length > 0) {
+            <div class="capacity-list">
+              @for (member of assigneeLoad; track member.name) {
+                <div class="capacity-row">
+                  <div class="capacity-meta">
+                    <strong>{{ member.name }}</strong>
+                    <span>{{ member.active }} active of {{ member.total }} total</span>
+                  </div>
+                  <div class="capacity-progress">
+                    <div class="capacity-track">
+                      <div class="capacity-fill" [style.width.%]="getAssigneeCompletion(member)"></div>
+                    </div>
+                    <span>{{ getAssigneeCompletion(member) }}%</span>
+                  </div>
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="empty-copy">No team assignments available yet</div>
+          }
+        </article>
+
+        <article class="panel signals-panel">
+          <div class="panel-head">
+            <h2>Action Center</h2>
+          </div>
+
+          <div class="signal-list">
+            @for (signal of actionSignals; track signal.title) {
+              <article class="signal-card" [class.alert]="signal.tone === 'alert'" [class.good]="signal.tone === 'good'">
+                <p>{{ signal.title }}</p>
+                <strong>{{ signal.value }}</strong>
+              </article>
+            }
+          </div>
+
+          <a class="signals-link" routerLink="/tasks">Review tasks board</a>
+        </article>
+      </section>
+
+    </section>
+  </main>
+</div>

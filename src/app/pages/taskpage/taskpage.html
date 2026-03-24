@@ -1,0 +1,280 @@
+<div class="kanban-shell" [class.page-enter]="pageEnter">
+  <!-- Modern Header -->
+  <header class="kanban-toolbar">
+    <div class="toolbar-container">
+      <div class="brand-section">
+        <div class="brand-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 7h10M7 12h10M7 17h10"/></svg>
+        </div>
+        <div class="brand-info">
+          <h1 class="app-title">TaskFlow</h1>
+          <p class="app-tagline">Kanban Board Management</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button type="button" class="btn-action secondary" (click)="openAddColumnModal()" title="Add new column">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M12 8v8M8 12h8"/></svg>
+          <span>Add Column</span>
+        </button>
+        <button class="btn-action primary" (click)="openTaskModal()" title="Create new task">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <span>Create Task</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Filter Bar -->
+  <div class="filter-bar">
+    <div class="filter-container">
+      <div class="filter-stats">
+        <span class="stat-badge">{{ totalTaskCount }} <span class="stat-label">Tasks</span></span>
+        @if (overdueTaskCount > 0) {
+          <span class="stat-badge overdue">{{ overdueTaskCount }} <span class="stat-label">Overdue</span></span>
+        }
+      </div>
+      
+      <div class="search-box">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="search" placeholder="Search tasks by title…" [(ngModel)]="searchQuery" (ngModelChange)="onSearchChange()">
+      </div>
+      
+      <div class="filter-controls">
+        <select [(ngModel)]="priorityFilter" (ngModelChange)="onFilterChange()" class="filter-select">
+          <option value="">All Priority</option>
+          <option value="High">🔴 High</option>
+          <option value="Medium">🟡 Medium</option>
+          <option value="Low">🟢 Low</option>
+        </select>
+        <select [(ngModel)]="assigneeFilter" (ngModelChange)="onAssigneeFilterChange()" class="filter-select">
+          <option value="">All Assignee</option>
+          @for (name of assigneeOptions; track name) {
+            <option [value]="name">{{ name }}</option>
+          }
+        </select>
+        @if (hasActiveFilters) {
+          <button type="button" class="btn-clear" (click)="clearFilters()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            Clear
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+
+  @if (notifications.length > 0) {
+    <div class="notification-stack" aria-live="polite">
+      @for (note of notifications; track note.id) {
+        <div class="toast" [attr.data-tone]="note.type">
+          <div class="toast-icon" aria-hidden="true">
+            @switch (note.type) {
+              @case ('success') {
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+              }
+              @case ('warning') {
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+              }
+              @case ('danger') {
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6"/><path d="M9 9l6 6"/></svg>
+              }
+              @default {
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+              }
+            }
+          </div>
+          <div class="toast-body">
+            <div class="toast-title">{{ note.title }}</div>
+            <div class="toast-message">{{ note.message }}</div>
+          </div>
+          <div class="toast-meta">{{ note.time }}</div>
+          <button type="button" class="toast-close" (click)="dismissNotification(note.id)" aria-label="Dismiss">✕</button>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Kanban Board -->
+  <main class="kanban-main">
+    <div class="board-wrapper" cdkDropListGroup>
+      @for (col of columns; track col.id) {
+        <div class="column-wrapper" [class]="'col-' + col.id" [class.col-custom]="isColumnCustom(col)">
+          <div class="column-header">
+            <div class="header-top">
+              <div class="column-info">
+                <span class="status-dot"></span>
+                @if (editingColumnId === col.id) {
+                  <div class="column-title-edit">
+                    <input type="text" [(ngModel)]="editingColumnTitle" (keydown.enter)="saveEditColumn()" (keydown.escape)="cancelEditColumn()" class="title-input" placeholder="Column name">
+                    <button type="button" class="edit-btn save" (click)="saveEditColumn()" title="Save">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                    </button>
+                    <button type="button" class="edit-btn cancel" (click)="cancelEditColumn()" title="Cancel">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                  </div>
+                } @else {
+                  <h3 class="column-title">{{ col.title }}</h3>
+                  <div class="column-menu">
+                    <button type="button" class="menu-btn edit" (click)="startEditColumn(col)" title="Edit column">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    </button>
+                    @if (isColumnCustom(col)) {
+                      <button type="button" class="menu-btn delete" (click)="deleteColumn(col)" title="Delete column">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                      </button>
+                    }
+                  </div>
+                }
+              </div>
+              <span class="task-count">{{ getFilteredCount(col.id) }}</span>
+            </div>
+          </div>
+
+          <div class="task-list-container"
+               cdkDropList
+               [id]="col.id"
+               [cdkDropListData]="getListByStatus(col.id)"
+               (cdkDropListDropped)="drop($event, col.id)">
+            <div class="task-stack">
+              @for (task of getListByStatus(col.id); track task.id) {
+                <div class="task-item" cdkDrag [hidden]="!matchesFilter(task)" (dblclick)="openTaskModal(task); $event.stopPropagation()" title="Double-click to edit">
+                  <div class="task-card">
+                    <div class="task-header">
+                      <div class="task-id">{{ task.id }}</div>
+                      <span class="priority-badge" [attr.data-priority]="task.priority">{{ task.priority }}</span>
+                    </div>
+                    <div class="task-title">{{ task.title }}</div>
+                    @if (task.description) {
+                      <div class="task-description">{{ task.description }}</div>
+                    }
+                    <div class="task-footer">
+                      <div class="task-meta">
+                        @if (task.dueDate) {
+                          <span class="due-date" [class.overdue]="isExpired(task.dueDate)" [class.due-soon]="isDueSoon(task.dueDate) && !isExpired(task.dueDate)">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>
+                            {{ task.dueDate | date:'MMM d' }}
+                          </span>
+                        }
+                      </div>
+                      <span class="assignee-avatar" [title]="task.assignee">{{ task.assignee ? task.assignee[0].toUpperCase() : '?' }}</span>
+                    </div>
+                    <div class="task-actions">
+                      <button type="button" class="action-btn" (click)="openTaskModal(task); $event.stopPropagation()" title="Edit task">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                      </button>
+                      <button type="button" class="action-btn delete" (click)="confirmRemoveTask(task, col.id); $event.stopPropagation()" title="Delete task">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              }
+              @if (getFilteredCount(col.id) === 0 && getListByStatus(col.id).length > 0) {
+                <div class="empty-state">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                  <p>No tasks match filters</p>
+                </div>
+              }
+            </div>
+            @if (getListByStatus(col.id).length <= 2 && (getFilteredCount(col.id) > 0 || getListByStatus(col.id).length === 0)) {
+              <div class="drag-placeholder" aria-hidden="true">
+                <div class="drag-placeholder-inner">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M12 8v8M8 12h8"/></svg>
+                  <p>Drag tasks here</p>
+                </div>
+              </div>
+            }
+          </div>
+          
+          @if (col.id === 'todo') {
+            <div class="column-footer">
+              <button type="button" class="add-task-btn" (click)="openTaskModal(undefined, col.id)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                <span>Add Task</span>
+              </button>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </main>
+
+  <!-- Task Modal -->
+  @if (isModalOpen) {
+    <div class="modal-overlay" (click)="closeModal()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <div>
+            <h2 class="modal-title">{{ editingTask ? '✏️ Edit Task' : '➕ Create Task' }}</h2>
+            <p class="modal-subtitle">{{ editingTask ? 'Update task details' : 'Add a new task to your board' }}</p>
+          </div>
+          <button type="button" class="modal-close" (click)="closeModal()" aria-label="Close">✕</button>
+        </div>
+        
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Task Title</label>
+            <input [(ngModel)]="tempTask.title" type="text" class="form-input" placeholder="Enter task title...">
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Description</label>
+            <textarea [(ngModel)]="tempTask.description" class="form-input textarea" placeholder="Add task description..." rows="3"></textarea>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Priority</label>
+              <select [(ngModel)]="tempTask.priority" class="form-input select">
+                <option value="Low">🟢 Low</option>
+                <option value="Medium">🟡 Medium</option>
+                <option value="High">🔴 High</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Due Date</label>
+              <input [(ngModel)]="tempTask.dueDate" type="date" class="form-input">
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Assignee</label>
+            <input [(ngModel)]="tempTask.assignee" type="text" class="form-input" placeholder="Team member name...">
+          </div>
+        </div>
+        
+        <div class="modal-footer">
+          <button type="button" class="btn-cancel" (click)="closeModal()">Cancel</button>
+          <button type="button" class="btn-save" (click)="saveTask()">Save Task</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Add Column Modal -->
+  @if (isAddColumnModalOpen) {
+    <div class="modal-overlay" (click)="closeAddColumnModal()">
+      <div class="modal-content compact" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <div>
+            <h2 class="modal-title">➕ Add Column</h2>
+            <p class="modal-subtitle">Create a new workflow column</p>
+          </div>
+          <button type="button" class="modal-close" (click)="closeAddColumnModal()" aria-label="Close">✕</button>
+        </div>
+        
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Column Name</label>
+            <input [(ngModel)]="newColumnTitle" type="text" class="form-input" placeholder="e.g., In Review, Testing..." (keydown.enter)="saveNewColumn()">
+          </div>
+        </div>
+        
+        <div class="modal-footer">
+          <button type="button" class="btn-cancel" (click)="closeAddColumnModal()">Cancel</button>
+          <button type="button" class="btn-save" (click)="saveNewColumn()">Add Column</button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

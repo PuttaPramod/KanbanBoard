@@ -1,0 +1,4 @@
+<app-navbar *ngIf="showNavbar"></app-navbar>
+<div class="page-content" [class.with-navbar]="showNavbar" [class.auth-page]="isAuthPage">
+  <router-outlet></router-outlet>
+</div>

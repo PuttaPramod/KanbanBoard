@@ -1,0 +1,76 @@
+<div class="profile-container">
+  
+
+  <main class="profile-main">
+    <section class="profile-layout">
+      <div class="profile-left-column">
+        <!-- Profile Summary -->
+        <section class="profile-section">
+          <div class="section-container">
+            <div class="profile-card">
+              <div class="profile-avatar">
+                <div class="avatar-placeholder">{{ userInitials }}</div>
+              </div>
+              <div class="profile-info">
+                <h2 class="user-name">{{ firstName }} {{ lastName }}</h2>
+                <p class="user-status">Active Member</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="deadlines-section">
+          <div class="section-container">
+            <div class="deadlines-head">
+              <h2 class="section-title">Upcoming Deadlines</h2>
+              <span class="deadlines-count">{{ upcomingTasks.length }}</span>
+            </div>
+
+            <ul *ngIf="upcomingTasks.length > 0" class="deadlines-list">
+              <li *ngFor="let task of upcomingTasks">
+                <div class="deadline-main">
+                  <p class="deadline-title">{{ task.title }}</p>
+                  <span class="deadline-priority" [ngClass]="getPriorityClass(task.priority)">{{ task.priority }}</span>
+                </div>
+                <p class="deadline-meta">
+                  <span>{{ task.dueDate | date: 'MMM dd' }}</span>
+                  <span class="due-badge">{{ getDueBadge(task) }}</span>
+                </p>
+              </li>
+            </ul>
+
+            <div *ngIf="upcomingTasks.length === 0" class="deadlines-empty">
+              No upcoming due dates
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="profile-right-column">
+        <section class="recent-tasks-section">
+          <div class="section-container">
+            <h2 class="section-title">Recent Tasks</h2>
+            <div class="tasks-list">
+              <div
+                *ngFor="let task of recentTasks"
+                [ngClass]="getTaskStatusClass(task.status)"
+                class="task-item">
+                <div class="task-status-dot"></div>
+                <div class="task-details">
+                  <div class="task-title">{{ task.title }}</div>
+                  <div class="task-meta">{{ getTaskStatusLabel(task.status) }} • {{ task.description || 'No description' }}</div>
+                </div>
+                <div [ngClass]="'priority-' + task.priority.toLowerCase()" class="task-priority">{{ task.priority }}</div>
+              </div>
+
+              <!-- Empty state if no tasks -->
+              <div *ngIf="recentTasks.length === 0" style="text-align: center; padding: 40px 20px; color: #9ca3af;">
+                <p style="font-size: 1rem;">No tasks yet. Create your first task to get started!</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </section>
+  </main>
+</div>
