@@ -1,131 +1,100 @@
 <div class="dashboard-shell">
-  <header class="dashboard-header">
-    <div class="header-copy">
-      <p class="eyebrow">Project Control Room</p>
-      <h1>Dashboard</h1>
-      <p class="subtitle">Live sprint status, delivery pulse, and active queue visibility.</p>
-    </div>
-    <a class="board-link" routerLink="/tasks">
-      <span>Open Kanban Board</span>
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <path d="M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-        <path d="m13 6 6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    </a>
-  </header>
-
-  <main class="dashboard-main">
-    <section class="insight-strip">
-      <article class="insight-card primary">
-        <p class="insight-kicker">{{ focusTitle }}</p>
-        <p class="insight-text">{{ focusMessage }}</p>
-      </article>
-      <article class="insight-card">
-        <p class="insight-kicker">Top Contributor</p>
-        <p class="insight-text">{{ topAssignee }}</p>
-      </article>
-      <article class="insight-card">
-        <p class="insight-kicker">At Risk (48h)</p>
-        <p class="insight-text">{{ atRiskCount }} task{{ atRiskCount !== 1 ? 's' : '' }}</p>
-      </article>
-    </section>
-
-    <section class="top-metrics">
-      <article class="metric-card total">
-        <p class="metric-label">Total Tasks</p>
-        <p class="metric-value">{{ totalTasks }}</p>
-      </article>
-      <article class="metric-card todo">
-        <p class="metric-label">To Do</p>
-        <p class="metric-value">{{ todoCount }}</p>
-      </article>
-      <article class="metric-card inprogress">
-        <p class="metric-label">In Progress</p>
-        <p class="metric-value">{{ inprogressCount }}</p>
-      </article>
-      <article class="metric-card done">
-        <p class="metric-label">Completed</p>
-        <p class="metric-value">{{ doneCount }}</p>
-      </article>
-      <article class="metric-card delivered">
-        <p class="metric-label">Delivered</p>
-        <p class="metric-value">{{ deliveredCount }}</p>
-      </article>
-      <article class="metric-card overdue">
-        <p class="metric-label">Overdue</p>
-        <p class="metric-value">{{ overdueCount }}</p>
-      </article>
-    </section>
-
-    <section class="action-grid">
-      <article class="panel deadlines-panel">
-        <div class="panel-head compact">
-          <h2>Upcoming Deadlines</h2>
-          <span class="count-pill">{{ upcomingTasks.length }}</span>
-        </div>
-        @if (upcomingTasks.length > 0) {
-          <ul class="deadlines-list">
-            @for (task of upcomingTasks; track task.id) {
-              <li>
-                <div class="deadline-main">
-                  <p class="deadline-title">{{ task.title }}</p>
-                  <span class="priority-pill" [ngClass]="getPriorityClass(task.priority)">{{ task.priority }}</span>
-                </div>
-                <p class="deadline-meta">
-                  <span>{{ task.dueDate | date: 'MMM dd' }}</span>
-                  <span class="due-badge">{{ getDueBadge(task) }}</span>
-                </p>
-              </li>
-            }
-          </ul>
-        } @else {
-          <div class="empty-copy">No upcoming due dates</div>
-        }
+  <main class="dashboard-grid">
+    <aside class="dashboard-sidebar">
+      <article class="hero-card">
+        <p class="hero-eyebrow">TaskFlow</p>
+        <h1>Control Hub</h1>
+        <p class="hero-copy">Monitor sprint health, team velocity, and upcoming pressure points in one place.</p>
+        <a class="hero-button" routerLink="/tasks">
+          <span>Go To Board</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="m13 6 6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
       </article>
 
-      <article class="panel mix-panel">
-        <div class="panel-head compact">
-          <h2>Workload Mix</h2>
+      <article class="focus-card">
+        <p class="section-eyebrow">Focus</p>
+        <h2>{{ focusTitle }}</h2>
+        <p class="focus-copy">{{ focusMessage }}</p>
+
+        <div class="focus-stat">
+          <span class="focus-stat-label">Top Contributor</span>
+          <strong>{{ topAssignee }}</strong>
         </div>
 
-        <div class="mix-group">
-          <p class="mix-title">By Priority</p>
-          <div class="mix-row">
-            <span>High</span>
-            <div class="mix-track"><div class="mix-fill high" [style.width.%]="getPriorityPercent('High')"></div></div>
-            <strong>{{ priorityCounts.High }}</strong>
-          </div>
-          <div class="mix-row">
-            <span>Medium</span>
-            <div class="mix-track"><div class="mix-fill medium" [style.width.%]="getPriorityPercent('Medium')"></div></div>
-            <strong>{{ priorityCounts.Medium }}</strong>
-          </div>
-          <div class="mix-row">
-            <span>Low</span>
-            <div class="mix-track"><div class="mix-fill low" [style.width.%]="getPriorityPercent('Low')"></div></div>
-            <strong>{{ priorityCounts.Low }}</strong>
+        <div class="focus-stat">
+          <span class="focus-stat-label">At Risk (48h)</span>
+          <strong>{{ atRiskCount }} task{{ atRiskCount !== 1 ? 's' : '' }}</strong>
+        </div>
+      </article>
+
+      <article class="panel completion-panel">
+        <div class="panel-head">
+          <h2>Completion Rate</h2>
+        </div>
+
+        <div class="completion-ring-wrap" role="progressbar" [attr.aria-valuenow]="completionRate" aria-valuemin="0" aria-valuemax="100">
+          <svg class="completion-ring" viewBox="0 0 120 120" aria-hidden="true">
+            <circle class="ring-track" cx="60" cy="60" [attr.r]="completionRadius"></circle>
+            <circle
+              class="ring-value"
+              cx="60"
+              cy="60"
+              [attr.r]="completionRadius"
+              [style.strokeDasharray.px]="completionCircumference"
+              [style.strokeDashoffset.px]="getCompletionOffset()"
+            ></circle>
+          </svg>
+          <div class="ring-label">
+            <strong>{{ completionRate }}%</strong>
+            <span>Completed</span>
           </div>
         </div>
 
-        <div class="mix-group">
-          <p class="mix-title">By Status</p>
-          @for (item of statusMix; track item.key) {
-            <div class="mix-row">
-              <span>{{ item.label }}</span>
-              <div class="mix-track"><div class="mix-fill" [style.width.%]="item.percent" [ngStyle]="getStatusMixStyle(item.key)"></div></div>
-              <strong>{{ item.count }}</strong>
-            </div>
-          }
+        <div class="completion-stats">
+          <span><strong>{{ todayCount }}</strong> Due Today</span>
+          <span><strong>{{ thisWeekCount }}</strong> This Week</span>
+          <span><strong>{{ teamMembersCount }}</strong> Team Members</span>
         </div>
       </article>
-    </section>
+    </aside>
 
-    <section class="content-grid">
-      <section class="analytics-hub">
+    <section class="dashboard-content">
+      <section class="top-metrics">
+        <article class="metric-card total">
+          <p class="metric-label">Total Tasks</p>
+          <p class="metric-value">{{ totalTasks }}</p>
+        </article>
+        <article class="metric-card todo">
+          <p class="metric-label">To Do</p>
+          <p class="metric-value">{{ todoCount }}</p>
+        </article>
+        <article class="metric-card inprogress">
+          <p class="metric-label">In Progress</p>
+          <p class="metric-value">{{ inprogressCount }}</p>
+        </article>
+        <article class="metric-card done">
+          <p class="metric-label">Completed</p>
+          <p class="metric-value">{{ doneCount }}</p>
+        </article>
+        <article class="metric-card delivered">
+          <p class="metric-label">Delivered</p>
+          <p class="metric-value">{{ deliveredCount }}</p>
+        </article>
+        <article class="metric-card overdue">
+          <p class="metric-label">Overdue</p>
+          <p class="metric-value">{{ overdueCount }}</p>
+        </article>
+      </section>
+
+      <section class="analytics-grid">
         <article class="panel chart-panel">
           <div class="panel-head compact">
             <h2>Task Distribution</h2>
           </div>
+
           <div class="chart-layout">
             <div class="chart-wrap">
               @if (pieChartLabels.length > 0) {
@@ -140,6 +109,7 @@
                 <div class="chart-empty">No tasks yet</div>
               }
             </div>
+
             @if (pieChartData.length > 0) {
               <div class="legend-grid chart-legend">
                 @for (item of pieChartData; track item.label) {
@@ -155,64 +125,90 @@
           </div>
         </article>
 
-        <article class="panel completion-panel">
-          <div class="panel-head">
-            <h2>Completion Rate</h2>
-            <p>Live</p>
+        <article class="panel mix-panel">
+          <div class="panel-head compact">
+            <h2>Workload Mix</h2>
           </div>
-          <div class="completion-ring-wrap" role="progressbar" [attr.aria-valuenow]="completionRate" aria-valuemin="0" aria-valuemax="100">
-            <svg class="completion-ring" viewBox="0 0 120 120" aria-hidden="true">
-              <circle class="ring-track" cx="60" cy="60" [attr.r]="completionRadius"></circle>
-              <circle
-                class="ring-value"
-                cx="60"
-                cy="60"
-                [attr.r]="completionRadius"
-                [style.strokeDasharray.px]="completionCircumference"
-                [style.strokeDashoffset.px]="getCompletionOffset()"
-              ></circle>
-            </svg>
-            <div class="ring-label">
-              <strong>{{ completionRate }}%</strong>
-              <span>Completed</span>
+
+          <div class="mix-group">
+            <p class="mix-title">By Priority</p>
+            <div class="mix-row">
+              <span>High</span>
+              <div class="mix-track"><div class="mix-fill high" [style.width.%]="getPriorityPercent('High')"></div></div>
+              <strong>{{ priorityCounts.High }}</strong>
+            </div>
+            <div class="mix-row">
+              <span>Medium</span>
+              <div class="mix-track"><div class="mix-fill medium" [style.width.%]="getPriorityPercent('Medium')"></div></div>
+              <strong>{{ priorityCounts.Medium }}</strong>
+            </div>
+            <div class="mix-row">
+              <span>Low</span>
+              <div class="mix-track"><div class="mix-fill low" [style.width.%]="getPriorityPercent('Low')"></div></div>
+              <strong>{{ priorityCounts.Low }}</strong>
             </div>
           </div>
-          <div class="completion-stats">
-            <span><strong>{{ todayCount }}</strong> Due Today</span>
-            <span><strong>{{ thisWeekCount }}</strong> This Week</span>
-            <span><strong>{{ teamMembersCount }}</strong> Team Members</span>
+
+          <div class="mix-group">
+            <p class="mix-title">By Status</p>
+            @for (item of statusMix; track item.key) {
+              <div class="mix-row">
+                <span>{{ item.label }}</span>
+                <div class="mix-track"><div class="mix-fill" [style.width.%]="item.percent" [ngStyle]="getStatusMixStyle(item.key)"></div></div>
+                <strong>{{ item.count }}</strong>
+              </div>
+            }
           </div>
         </article>
       </section>
 
-      <article class="panel recent-panel">
-        <div class="panel-head compact">
-          <h2>Recent Tasks</h2>
-          <span class="count-pill">{{ filteredRecentTasks.length }}</span>
-        </div>
+      <section class="insights-grid">
+        <article class="panel capacity-panel">
+          <div class="panel-head">
+            <h2>Team Capacity</h2>
+            <span class="count-pill">{{ assigneeLoad.length }}</span>
+          </div>
 
-        @if (filteredRecentTasks.length > 0) {
-          <ul class="recent-list">
-            @for (task of filteredRecentTasks; track task.id) {
-              <li>
-                <div class="task-row">
-                  <p class="task-title">{{ task.title }}</p>
-                  <span class="status-pill" [ngClass]="getStatusClass(task)" [ngStyle]="getStatusBadgeStyle(task)">{{ getStatusLabel(task) }}</span>
+          @if (assigneeLoad.length > 0) {
+            <div class="capacity-list">
+              @for (member of assigneeLoad; track member.name) {
+                <div class="capacity-row">
+                  <div class="capacity-meta">
+                    <strong>{{ member.name }}</strong>
+                    <span>{{ member.active }} active of {{ member.total }} total</span>
+                  </div>
+                  <div class="capacity-progress">
+                    <div class="capacity-track">
+                      <div class="capacity-fill" [style.width.%]="getAssigneeCompletion(member)"></div>
+                    </div>
+                    <span>{{ getAssigneeCompletion(member) }}%</span>
+                  </div>
                 </div>
-                <p class="task-date">
-                  @if (task.dueDate) {
-                    Due {{ task.dueDate | date: 'MMM dd' }}
-                  } @else {
-                    No due date
-                  }
-                </p>
-              </li>
+              }
+            </div>
+          } @else {
+            <div class="empty-copy">No team assignments available yet</div>
+          }
+        </article>
+
+        <article class="panel signals-panel">
+          <div class="panel-head">
+            <h2>Action Center</h2>
+          </div>
+
+          <div class="signal-list">
+            @for (signal of actionSignals; track signal.title) {
+              <article class="signal-card" [class.alert]="signal.tone === 'alert'" [class.good]="signal.tone === 'good'">
+                <p>{{ signal.title }}</p>
+                <strong>{{ signal.value }}</strong>
+              </article>
             }
-          </ul>
-        } @else {
-          <div class="empty-copy">No tasks match this filter</div>
-        }
-      </article>
+          </div>
+
+          <a class="signals-link" routerLink="/tasks">Review tasks board</a>
+        </article>
+      </section>
+
     </section>
   </main>
 </div>

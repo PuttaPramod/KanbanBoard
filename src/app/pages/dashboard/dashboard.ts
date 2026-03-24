@@ -34,15 +34,15 @@ export class Dashboard implements OnInit {
   thisWeekCount = 0;
   completionRate = 0;
   teamMembersCount = 0;
-  filteredRecentTasks: Task[] = [];
   allTasks: Task[] = [];
   atRiskCount = 0;
   topAssignee = 'Unassigned';
   focusTitle = 'All systems healthy';
   focusMessage = 'No urgent risks detected.';
-  upcomingTasks: Task[] = [];
   priorityCounts: Record<'Low' | 'Medium' | 'High', number> = { Low: 0, Medium: 0, High: 0 };
   statusMix: Array<{ key: string; label: string; count: number; percent: number; tone: string }> = [];
+  assigneeLoad: Array<{ name: string; total: number; active: number; completed: number }> = [];
+  actionSignals: Array<{ title: string; value: string; tone: 'alert' | 'good' | 'info' }> = [];
 
   // Pie chart data
   pieChartData: Array<{ label: string; value: number; color: string }> = [];
@@ -120,7 +120,7 @@ export class Dashboard implements OnInit {
         duration: 900,
         easing: 'easeOutCubic'
       }
-    } as any;
+    } as ChartConfiguration<'doughnut'>['options'];
   }
 
   setModel(model: string) {
@@ -226,6 +226,8 @@ export class Dashboard implements OnInit {
     this.updateFocusBanner();
     this.updatePriorityAndUpcoming();
     this.updateStatusMix(statusCountMap);
+    this.updateAssigneeLoad();
+    this.updateActionSignals();
 
     // Build pie chart data
     this.pieChartData = this.statusDefs
@@ -234,7 +236,6 @@ export class Dashboard implements OnInit {
 
     // Update Chart.js pie chart
     this.updatePieChart();
-    this.updateRecentTasksView();
   }
 
   private getTopAssignee(assigneeCount: Map<string, number>): string {
@@ -280,14 +281,45 @@ export class Dashboard implements OnInit {
       }
     });
 
-    this.upcomingTasks = pending
-      .filter(task => !!task.dueDate)
-      .sort((a, b) => {
-        const aTime = new Date((a.dueDate || '') + 'T00:00:00').getTime();
-        const bTime = new Date((b.dueDate || '') + 'T00:00:00').getTime();
-        return aTime - bTime;
-      })
-      .slice(0, 6);
+  }
+
+  private updateAssigneeLoad(): void {
+    const summary = new Map<string, { total: number; active: number; completed: number }>();
+
+    this.allTasks.forEach(task => {
+      const name = task.assignee?.trim() || 'Unassigned';
+      const current = summary.get(name) || { total: 0, active: 0, completed: 0 };
+      current.total += 1;
+      if (task.status === 'done' || task.status === 'delivered') current.completed += 1;
+      else current.active += 1;
+      summary.set(name, current);
+    });
+
+    this.assigneeLoad = Array.from(summary.entries())
+      .map(([name, stats]) => ({ name, ...stats }))
+      .sort((a, b) => b.total - a.total || a.name.localeCompare(b.name))
+      .slice(0, 4);
+  }
+
+  private updateActionSignals(): void {
+    const activeWork = this.todoCount + this.inprogressCount;
+    this.actionSignals = [
+      {
+        title: 'Active Queue',
+        value: `${activeWork} task${activeWork === 1 ? '' : 's'} in motion`,
+        tone: activeWork > 4 ? 'alert' : 'info'
+      },
+      {
+        title: 'Delivery Pace',
+        value: `${this.doneCount + this.deliveredCount} task${this.doneCount + this.deliveredCount === 1 ? '' : 's'} finished`,
+        tone: this.completionRate >= 60 ? 'good' : 'info'
+      },
+      {
+        title: 'Deadline Pressure',
+        value: this.overdueCount > 0 ? `${this.overdueCount} overdue right now` : `${this.todayCount} due today`,
+        tone: this.overdueCount > 0 ? 'alert' : 'info'
+      }
+    ];
   }
 
   private updateStatusMix(statusCountMap: Map<string, number>): void {
@@ -368,11 +400,9 @@ export class Dashboard implements OnInit {
     return 'low';
   }
 
-  private updateRecentTasksView(): void {
-    this.filteredRecentTasks = this.allTasks
-      .slice()
-      .sort((a, b) => (b.id || '').localeCompare(a.id || ''))
-      .slice(0, 5);
+  getAssigneeCompletion(stats: { total: number; completed: number }): number {
+    if (!stats.total) return 0;
+    return Math.round((stats.completed / stats.total) * 100);
   }
 
   private updatePieChart(): void {

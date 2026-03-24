@@ -28,7 +28,6 @@ html, body {
 app-root {
   display: block;
   min-height: 100vh;
-  padding-top: 70px;
 }
 
 /* Scrollbar Styling */

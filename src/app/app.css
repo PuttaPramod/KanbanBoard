@@ -60,7 +60,7 @@ app-navbar {
 }
 
 .page-content.auth-page {
-  padding-top: 0;
+  padding-top: 28px;
 }
 
 router-outlet {
@@ -89,7 +89,7 @@ router-outlet {
   }
 
   .page-content.auth-page {
-    padding-top: 0;
+    padding-top: 20px;
   }
   
   app-navbar {

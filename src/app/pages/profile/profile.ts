@@ -39,6 +39,18 @@ export class Profile implements OnInit, OnDestroy {
     return this.taskService.recentTasks();
   }
 
+  get upcomingTasks(): Task[] {
+    return this.taskService
+      .getAllTasks()
+      .filter((task) => !!task.dueDate && task.status !== 'done' && task.status !== 'delivered')
+      .sort((a, b) => {
+        const aTime = new Date((a.dueDate || '') + 'T00:00:00').getTime();
+        const bTime = new Date((b.dueDate || '') + 'T00:00:00').getTime();
+        return aTime - bTime;
+      })
+      .slice(0, 6);
+  }
+
   private subscriptions = new Subscription();
 
   constructor(
@@ -154,5 +166,24 @@ export class Profile implements OnInit, OnDestroy {
       delivered: 'task-item-done'
     };
     return statusMap[status] || 'task-item-todo';
+  }
+
+  getPriorityClass(level: string): string {
+    const normalized = (level || '').toLowerCase();
+    if (normalized === 'high') return 'high';
+    if (normalized === 'medium') return 'medium';
+    return 'low';
+  }
+
+  getDueBadge(task: Task): string {
+    if (!task.dueDate) return 'No due date';
+    const today = new Date();
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const due = new Date(task.dueDate + 'T00:00:00');
+    const diffDays = Math.round((due.getTime() - todayStart.getTime()) / (24 * 60 * 60 * 1000));
+    if (diffDays < 0) return `Overdue ${Math.abs(diffDays)}d`;
+    if (diffDays === 0) return 'Due today';
+    if (diffDays === 1) return 'Due tomorrow';
+    return `Due in ${diffDays}d`;
   }
 }
