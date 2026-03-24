@@ -34,6 +34,7 @@
     "@angular/platform-server": "^20.0.0",
     "@angular/router": "^20.0.0",
     "@angular/ssr": "^20.0.0",
+    "@netlify/angular-runtime": "^3.0.1",
     "@tailwindcss/postcss": "^4.1.18",
     "bootstrap": "^5.3.8",
     "chart.js": "^4.5.1",
